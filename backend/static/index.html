@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GroceriesCompare</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f2f2f7; color: #1c1c1e; min-height: 100vh; }
+  .container { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #6e6e73; font-size: 14px; margin-bottom: 24px; }
+  .platforms { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+  .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+  .card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+  .card label { font-size: 13px; font-weight: 600; color: #6e6e73; display: block; margin-bottom: 8px; }
+  .pincode-row { display: flex; align-items: center; gap: 8px; }
+  input[type=tel], input[type=text] { width: 100%; padding: 10px 12px; border: 1.5px solid #e5e5ea; border-radius: 10px; font-size: 16px; outline: none; transition: border 0.2s; }
+  input:focus { border-color: #34c759; }
+  .check { color: #34c759; font-size: 20px; }
+  textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e5e5ea; border-radius: 10px; font-size: 15px; outline: none; resize: none; height: 140px; font-family: inherit; transition: border 0.2s; }
+  textarea:focus { border-color: #34c759; }
+  .examples { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-top: 10px; }
+  .examples::-webkit-scrollbar { display: none; }
+  .ex-btn { white-space: nowrap; padding: 6px 12px; border: 1.5px solid #e5e5ea; border-radius: 20px; font-size: 12px; background: white; color: #3c3c43; cursor: pointer; }
+  .compare-btn { width: 100%; padding: 16px; background: #34c759; color: white; font-size: 17px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
+  .compare-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  /* Progress */
+  #progress-view, #results-view { display: none; }
+  .ring-wrap { display: flex; flex-direction: column; align-items: center; padding: 32px 0 24px; }
+  .ring { position: relative; width: 100px; height: 100px; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: #e5e5ea; stroke-width: 7; }
+  .ring-fill { fill: none; stroke: #34c759; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 0.5s ease; }
+  .ring-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .ring-num { font-size: 28px; font-weight: 700; line-height: 1; }
+  .ring-sub { font-size: 12px; color: #6e6e73; }
+  .status-msg { font-size: 17px; font-weight: 600; margin-top: 12px; text-align: center; }
+  .status-sub { font-size: 13px; color: #6e6e73; margin-top: 4px; text-align: center; }
+  .platform-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; margin-bottom: 8px; background: #f2f2f7; transition: background 0.3s; }
+  .platform-row.done { background: rgba(52,199,89,0.08); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .platform-name { flex: 1; font-size: 15px; }
+  .status-icon { font-size: 18px; }
+  .spinner { width: 18px; height: 18px; border: 2px solid #e5e5ea; border-top-color: #34c759; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* Results */
+  .savings-banner { background: linear-gradient(135deg, #1a7a3f, #20a050); border-radius: 16px; padding: 20px; color: white; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .savings-amount { font-size: 36px; font-weight: 700; line-height: 1; }
+  .savings-label { font-size: 13px; opacity: 0.85; margin-bottom: 6px; }
+  .savings-sub { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+  .rupee-icon { font-size: 48px; opacity: 0.25; }
+  .section-header { font-size: 17px; font-weight: 600; margin: 20px 0 10px; }
+  .section-sub { font-size: 13px; color: #6e6e73; font-weight: 400; margin-left: 6px; }
+  .cart-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; border: 1.5px solid rgba(52,199,89,0.3); }
+  .cart-card.dimmed { border-color: rgba(0,0,0,0.1); opacity: 0.65; }
+  .cart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .cart-platform { font-size: 17px; font-weight: 600; }
+  .cart-total { font-size: 20px; font-weight: 700; text-align: right; }
+  .cart-delivery { font-size: 11px; margin-top: 2px; }
+  .free-del { color: #34c759; }
+  .paid-del { color: #ff9500; }
+  .cart-meta { font-size: 12px; color: #6e6e73; display: flex; justify-content: space-between; margin-bottom: 10px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 11px; padding: 3px 8px; background: #f2f2f7; border-radius: 20px; }
+  .price-row-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid #e5e5ea; }
+  .price-row-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; text-transform: capitalize; }
+  .price-chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; }
+  .price-chips::-webkit-scrollbar { display: none; }
+  .price-chip { flex-shrink: 0; text-align: center; padding: 8px 10px; border-radius: 10px; background: #f2f2f7; border: 1.5px solid transparent; min-width: 70px; }
+  .price-chip.cheapest { background: rgba(52,199,89,0.1); border-color: #34c759; }
+  .chip-platform { font-size: 9px; color: #6e6e73; font-weight: 500; }
+  .chip-price { font-size: 15px; font-weight: 700; }
+  .chip-price.cheapest { color: #34c759; }
+  .chip-unit { font-size: 9px; color: #6e6e73; }
+  .unmatched { background: rgba(255,149,0,0.08); border-radius: 12px; padding: 14px; display: flex; gap: 10px; margin-bottom: 12px; }
+  .back-btn { width: 100%; padding: 14px; background: #f2f2f7; color: #1c1c1e; font-size: 16px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; margin-top: 8px; }
+  .error-view { text-align: center; padding: 40px 20px; }
+  .error-icon { font-size: 52px; margin-bottom: 16px; }
+  .error-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .error-msg { color: #6e6e73; font-size: 15px; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- INPUT VIEW -->
+<div id="input-view">
+  <h1>GroceriesCompare</h1>
+  <p class="subtitle">Find the cheapest cart across 6 apps</p>
+
+  <div class="platforms">
+    <span class="pill" style="color:#b8950a;background:#fef9e7">⚡ Blinkit</span>
+    <span class="pill" style="color:#6b21a8;background:#f5f3ff">🐇 Zepto</span>
+    <span class="pill" style="color:#4a7c10;background:#f0fdf4">🧺 BigBasket</span>
+    <span class="pill" style="color:#c2410c;background:#fff7ed">🔥 Instamart</span>
+    <span class="pill" style="color:#1d4ed8;background:#eff6ff">🌿 AmazonFresh</span>
+    <span class="pill" style="color:#1d4ed8;background:#eff6ff">🕐 Flipkart Min</span>
+  </div>
+
+  <div class="card">
+    <label>📍 DELIVERY PINCODE</label>
+    <div class="pincode-row">
+      <input type="tel" id="pincode" placeholder="6-digit pincode" maxlength="6" oninput="onPincodeInput()">
+      <span class="check" id="pin-check" style="display:none">✓</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>🛒 YOUR GROCERY LIST</label>
+    <textarea id="grocery-text" placeholder="One item per line or comma-separated&#10;e.g. 2L milk, eggs 12, amul butter 500g, bread"></textarea>
+    <div class="examples">
+      <button class="ex-btn" onclick="fillExample('2L milk, eggs 12, amul butter 500g, bread, atta 5kg')">Weekly basics</button>
+      <button class="ex-btn" onclick="fillExample('tomatoes 1kg, onions 2kg, potatoes 2kg, capsicum')">Veggies</button>
+      <button class="ex-btn" onclick="fillExample('sugar 1kg, salt, oil 1L, dal 500g, rice 5kg')">Pantry restock</button>
+    </div>
+  </div>
+
+  <button class="compare-btn" id="compare-btn" onclick="startCompare()" disabled>
+    🔍 Compare Prices Now
+  </button>
+</div>
+
+<!-- PROGRESS VIEW -->
+<div id="progress-view">
+  <div class="ring-wrap">
+    <div class="ring">
+      <svg viewBox="0 0 100 100" width="100" height="100">
+        <circle class="ring-bg" cx="50" cy="50" r="45"/>
+        <circle class="ring-fill" id="ring-fill" cx="50" cy="50" r="45"/>
+      </svg>
+      <div class="ring-text">
+        <div class="ring-num" id="ring-num">0</div>
+        <div class="ring-sub">of 6</div>
+      </div>
+    </div>
+    <div class="status-msg" id="status-msg">Starting...</div>
+    <div class="status-sub">Searching all apps in parallel</div>
+  </div>
+
+  <div class="card" style="padding:12px">
+    <div id="platform-rows"></div>
+  </div>
+
+  <button class="back-btn" onclick="cancelCompare()">Cancel</button>
+</div>
+
+<!-- RESULTS VIEW -->
+<div id="results-view"></div>
+
+</div>
+<script>
+const PLATFORMS = [
+  {name:'Blinkit',      color:'#F7C900', icon:'⚡'},
+  {name:'Zepto',        color:'#8B2FC9', icon:'🐇'},
+  {name:'BigBasket',    color:'#84C225', icon:'🧺'},
+  {name:'Instamart',    color:'#FC8019', icon:'🔥'},
+  {name:'AmazonFresh',  color:'#146EB4', icon:'🌿'},
+  {name:'Flipkart Minutes', color:'#2874F0', icon:'🕐'},
+];
+
+let currentJobId = null;
+let pollTimer = null;
+
+function onPincodeInput() {
+  const v = document.getElementById('pincode').value;
+  document.getElementById('pin-check').style.display = v.length===6 ? 'inline' : 'none';
+  updateBtn();
+}
+function updateBtn() {
+  const pin = document.getElementById('pincode').value;
+  const txt = document.getElementById('grocery-text').value.trim();
+  document.getElementById('compare-btn').disabled = !(pin.length===6 && txt.length>0);
+}
+document.getElementById('grocery-text').addEventListener('input', updateBtn);
+
+function fillExample(text) {
+  document.getElementById('grocery-text').value = text;
+  updateBtn();
+}
+
+function showView(name) {
+  ['input-view','progress-view','results-view'].forEach(id => {
+    document.getElementById(id).style.display = id===name+'-view' ? 'block' : 'none';
+  });
+}
+
+function buildPlatformRows(progress) {
+  const container = document.getElementById('platform-rows');
+  container.innerHTML = '';
+  let doneCount = 0;
+  PLATFORMS.forEach(p => {
+    const status = progress ? progress[p.name] : undefined;
+    const isDone = status === 'done';
+    const isError = status && status.startsWith('error');
+    if (isDone) doneCount++;
+    const row = document.createElement('div');
+    row.className = 'platform-row' + (isDone ? ' done' : '');
+    row.innerHTML = `
+      <div class="dot" style="background:${p.color}"></div>
+      <span style="font-size:16px">${p.icon}</span>
+      <span class="platform-name">${p.name}</span>
+      <span class="status-icon">${isDone ? '✅' : isError ? '❌' : '<div class="spinner"></div>'}</span>
+    `;
+    container.appendChild(row);
+  });
+  return doneCount;
+}
+
+function updateRing(count) {
+  const circumference = 283;
+  const offset = circumference - (count / 6) * circumference;
+  document.getElementById('ring-fill').style.strokeDashoffset = offset;
+  document.getElementById('ring-num').textContent = count;
+}
+
+async function startCompare() {
+  const grocery = document.getElementById('grocery-text').value.trim();
+  const pincode = document.getElementById('pincode').value;
+  showView('progress');
+  buildPlatformRows(null);
+  updateRing(0);
+  document.getElementById('status-msg').textContent = 'Normalizing your list...';
+
+  try {
+    const resp = await fetch('/compare', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({grocery_list: grocery, pincode: pincode})
+    });
+    const data = await resp.json();
+    currentJobId = data.job_id;
+
+    // Try WebSocket first
+    const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProto}//${location.host}/ws/${currentJobId}`);
+    let wsDelivered = false;
+
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.event === 'progress') {
+        const count = buildPlatformRows(msg.progress);
+        updateRing(count);
+        document.getElementById('status-msg').textContent =
+          count < 6 ? `Scanned ${count} of 6 apps...` : 'Crunching numbers...';
+      } else if (msg.event === 'done') {
+        wsDelivered = true;
+        ws.close();
+        showResults(msg.result);
+      } else if (msg.event === 'failed') {
+        wsDelivered = true;
+        ws.close();
+        showError('Comparison failed on server');
+      }
+    };
+    ws.onerror = () => { if (!wsDelivered) startPolling(); };
+    ws.onclose = () => { if (!wsDelivered) startPolling(); };
+
+  } catch(e) {
+    showError('Could not reach server: ' + e.message);
+  }
+}
+
+function startPolling() {
+  pollTimer = setInterval(async () => {
+    try {
+      const resp = await fetch(`/compare/${currentJobId}`);
+      const data = await resp.json();
+      if (data.progress) {
+        const count = buildPlatformRows(data.progress);
+        updateRing(count);
+      }
+      if (data.status === 'done') {
+        clearInterval(pollTimer);
+        showResults(data.result);
+      } else if (data.status === 'failed') {
+        clearInterval(pollTimer);
+        showError('Comparison failed');
+      }
+    } catch(e) {}
+  }, 2000);
+}
+
+function cancelCompare() {
+  clearInterval(pollTimer);
+  showView('input');
+}
+
+function fmt(n) { return '₹' + Math.round(n); }
+
+function showResults(result) {
+  const isSplit = result.recommended_carts.length > 1;
+  let html = '';
+
+  // Savings banner
+  if (result.total_savings > 0) {
+    html += `<div class="savings-banner">
+      <div>
+        <div class="savings-label">${isSplit ? 'Split & save' : 'You save'}</div>
+        <div class="savings-amount">₹${Math.round(result.total_savings)}</div>
+        <div class="savings-sub">${result.savings_pct.toFixed(1)}% cheaper than best single app</div>
+      </div>
+      <div class="rupee-icon">₹</div>
+    </div>`;
+  } else if (result.single_best_cart) {
+    html += `<div class="cart-card" style="display:flex;align-items:center;gap:12px">
+      <span style="color:#34c759;font-size:22px">✅</span>
+      <div><div style="font-size:13px;color:#6e6e73">Best single app</div>
+      <div style="font-size:17px;font-weight:700">${result.single_best_cart.platform}</div></div>
+      <div style="margin-left:auto;font-size:20px;font-weight:700">${fmt(result.single_best_cart.total)}</div>
+    </div>`;
+  }
+
+  // Recommended carts
+  html += `<div class="section-header">${isSplit ? 'Optimal Split' : 'Best App'}<span class="section-sub">${isSplit ? `Buy from ${result.recommended_carts.length} apps` : 'All items cheapest here'}</span></div>`;
+  result.recommended_carts.forEach(cart => { html += cartCardHTML(cart, false); });
+
+  // Single app comparison
+  if (isSplit && result.single_best_cart) {
+    html += `<div class="section-header">vs. One App<span class="section-sub">If you ordered from ${result.single_best_cart.platform}</span></div>`;
+    html += cartCardHTML(result.single_best_cart, true);
+  }
+
+  // Price matrix
+  html += `<div class="section-header">Item Breakdown<span class="section-sub">Cheapest in green</span></div>`;
+  result.price_matrix.forEach(row => {
+    if (row.prices.length === 0) return;
+    const sorted = [...row.prices].sort((a,b) => a.price - b.price);
+    html += `<div class="price-row-card">
+      <div class="price-row-title">${row.query}</div>
+      <div class="price-chips">`;
+    sorted.forEach(p => {
+      const cheap = p.platform === row.cheapest_platform;
+      html += `<div class="price-chip ${cheap?'cheapest':''}">
+        <div class="chip-platform">${p.platform.replace(' Minutes','')}</div>
+        <div class="chip-price ${cheap?'cheapest':''}">${fmt(p.price)}</div>
+        ${p.unit ? `<div class="chip-unit">${p.unit}</div>` : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  // Unmatched
+  if (result.unmatched_items.length > 0) {
+    html += `<div class="unmatched"><span style="font-size:20px">⚠️</span>
+      <div><div style="font-weight:600;color:#e67700">Not found anywhere</div>
+      ${result.unmatched_items.map(i=>`<div style="font-size:13px;color:#6e6e73">• ${i}</div>`).join('')}
+      </div></div>`;
+  }
+
+  html += `<button class="back-btn" onclick="showView('input')">← Compare Again</button>`;
+
+  const rv = document.getElementById('results-view');
+  rv.innerHTML = html;
+  showView('results');
+  window.scrollTo(0,0);
+}
+
+function cartCardHTML(cart, dimmed) {
+  const tags = cart.items.map(i => `<span class="tag">${i}</span>`).join('');
+  const delHTML = cart.delivery_fee > 0
+    ? `<div class="cart-delivery paid-del">+ ₹${Math.round(cart.delivery_fee)} delivery</div>`
+    : `<div class="cart-delivery free-del">Free delivery</div>`;
+  return `<div class="cart-card ${dimmed?'dimmed':''}">
+    <div class="cart-header">
+      <div class="cart-platform">${cart.platform}</div>
+      <div><div class="cart-total">${fmt(cart.total)}</div>${delHTML}</div>
+    </div>
+    <div class="cart-meta"><span>${cart.item_count} items</span><span>Subtotal ${fmt(cart.subtotal)}</span></div>
+    <div class="tags">${tags}</div>
+  </div>`;
+}
+
+function showError(msg) {
+  const rv = document.getElementById('results-view');
+  rv.innerHTML = `<div class="error-view">
+    <div class="error-icon">📡</div>
+    <div class="error-title">Comparison Failed</div>
+    <div class="error-msg">${msg}</div>
+    <button class="back-btn" onclick="showView('input')">← Try Again</button>
+  </div>`;
+  showView('results');
+}
+</script>
+</body>
+</html>
