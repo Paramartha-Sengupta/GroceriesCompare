@@ -1,10 +1,13 @@
 import asyncio
+import os
 import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from matcher import normalize_grocery_list, build_price_matrix
@@ -12,7 +15,6 @@ from optimizer import optimize, OptimizationResult
 from scrapers import ALL_SCRAPERS
 from scrapers.base import ScrapedItem
 
-# In-memory job store (replace with Redis for multi-instance deploys)
 jobs: dict[str, dict[str, Any]] = {}
 
 
@@ -30,12 +32,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
 
-# ── Request / Response models ──────────────────────────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend():
+    with open(os.path.join(_static_dir, "index.html")) as f:
+        return f.read()
+
+
+# ── Request / Response models ─────────────────────────────────────────────
 
 class CompareRequest(BaseModel):
-    grocery_list: str       # raw text, e.g. "2 litres milk, amul butter, 6 eggs"
-    pincode: str            # e.g. "500032"
+    grocery_list: str
+    pincode: str
 
 
 class ItemPrice(BaseModel):
@@ -70,13 +80,7 @@ class CompareResponse(BaseModel):
     unmatched_items: list[str]
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _item_to_dict(item: ScrapedItem | None) -> dict | None:
-    if item is None:
-        return None
-    return {"platform": item.platform, "name": item.name, "price": item.price, "unit": item.unit}
-
+# ── Helpers ───────────────────────────────────────────────────────────────
 
 def _build_response(job_id: str, queries: list[str], result: OptimizationResult, price_matrix: dict) -> CompareResponse:
     price_rows: list[PriceRow] = []
@@ -111,7 +115,7 @@ def _build_response(job_id: str, queries: list[str], result: OptimizationResult,
     )
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ── Routes ────────────────────────────────────────────────────────────────
 
 @app.post("/compare", response_model=dict)
 async def start_compare(req: CompareRequest):
@@ -156,12 +160,11 @@ async def websocket_progress(websocket: WebSocket, job_id: str):
         pass
 
 
-# ── Background task ───────────────────────────────────────────────────────────
+# ── Background task ───────────────────────────────────────────────────────
 
 async def _run_comparison(job_id: str, grocery_list: str, pincode: str):
     job = jobs[job_id]
     job["status"] = "normalizing"
-
     try:
         queries = await normalize_grocery_list(grocery_list)
         job["progress"]["queries"] = queries
