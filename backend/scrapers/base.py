@@ -4,11 +4,6 @@ from dataclasses import dataclass, field
 from typing import Optional
 from playwright.async_api import async_playwright, Page
 
-CHROMIUM_PATH = os.environ.get(
-    "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH",
-    "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
-)
-
 
 @dataclass
 class ScrapedItem:
@@ -19,7 +14,7 @@ class ScrapedItem:
     unit: str
     image_url: Optional[str] = None
     in_stock: bool = True
-    original_price: Optional[float] = None  # if discounted
+    original_price: Optional[float] = None
 
 
 @dataclass
@@ -38,8 +33,8 @@ class BaseScraper(ABC):
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=True,
-                executable_path=CHROMIUM_PATH,
-                args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"],
+                args=["--no-sandbox", "--disable-dev-shm-usage",
+                      "--disable-blink-features=AutomationControlled"],
             )
             context = await browser.new_context(
                 user_agent=(
@@ -51,7 +46,6 @@ class BaseScraper(ABC):
                 ignore_https_errors=True,
             )
             page = await context.new_page()
-
             results: list[ScrapeResult] = []
             try:
                 await self.set_location(page, pincode)
@@ -60,13 +54,12 @@ class BaseScraper(ABC):
                     results.append(result)
             finally:
                 await browser.close()
-
         return results
 
     @abstractmethod
     async def set_location(self, page: Page, pincode: str) -> None:
-        """Set delivery pincode on the platform."""
+        pass
 
     @abstractmethod
     async def _scrape_query(self, page: Page, query: str) -> ScrapeResult:
-        """Search for one item and return top results."""
+        pass
