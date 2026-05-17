@@ -1,93 +1,61 @@
-import asyncio
 import re
-from playwright.async_api import Page
-from .base import BaseScraper, ScrapeResult, ScrapedItem
+import httpx
+from bs4 import BeautifulSoup
+from .base import BaseScraper, ScrapeResult, ScrapedItem, DESKTOP_UA
 
-FRESH_NODE = "5940050031"  # Amazon.in Fresh & Gourmet node
+FRESH_NODE = "5940050031"
 
 
 class AmazonFreshScraper(BaseScraper):
     platform_name = "AmazonFresh"
-    base_url = "https://www.amazon.in"
 
-    async def set_location(self, page: Page, pincode: str) -> None:
-        await page.goto(self.base_url, wait_until="domcontentloaded", timeout=30000)
-        await asyncio.sleep(2)
+    async def _scrape_query(self, client: httpx.AsyncClient, query: str, lat: float, lon: float) -> ScrapeResult:
+        headers = {
+            "User-Agent": DESKTOP_UA,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-IN,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+        }
         try:
-            await page.click("#nav-global-location-popover-link, #glow-ingress-block", timeout=4000)
-            await asyncio.sleep(1)
-            inp = page.locator("input[id*='GLUXZipUpdateInput'], input[placeholder*='PIN'], input[placeholder*='zip']")
-            await inp.first.fill(pincode, timeout=4000)
-            apply = page.locator("input[aria-labelledby*='GLUXZipUpdate'], span:has-text('Apply'), button:has-text('Apply')")
-            await apply.first.click(timeout=3000)
-            await asyncio.sleep(2)
-        except Exception:
-            pass
+            r = await client.get(
+                "https://www.amazon.in/s",
+                params={"k": query, "i": "grocery", "rh": f"n:{FRESH_NODE}"},
+                headers=headers,
+                timeout=20,
+            )
+            r.raise_for_status()
+            return ScrapeResult(
+                platform=self.platform_name, query=query,
+                items=self._parse_html(query, r.text)
+            )
+        except Exception as e:
+            return ScrapeResult(platform=self.platform_name, query=query, error=str(e))
 
-    async def _scrape_query(self, page: Page, query: str) -> ScrapeResult:
-        captured_products: list[dict] = []
-
-        async def capture_response(response):
-            url = response.url
-            if "amazon.in" in url and ("s?" in url or "search" in url or "api" in url):
-                try:
-                    body = await response.json()
-                    prods = (
-                        body.get("searchResult", {}).get("items")
-                        or body.get("results") or body.get("items") or []
-                    )
-                    captured_products.extend(prods)
-                except Exception:
-                    pass
-
-        page.on("response", capture_response)
-        search_url = f"{self.base_url}/s?k={query.replace(' ', '+')}&rh=n%3A{FRESH_NODE}&i=grocery"
-        try:
-            await page.goto(search_url, wait_until="networkidle", timeout=30000)
-        except Exception:
-            try:
-                await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
-                await asyncio.sleep(3)
-            except Exception as e:
-                return ScrapeResult(platform=self.platform_name, query=query, error=str(e))
-        page.remove_listener("response", capture_response)
-
-        items = await self._dom_parse(page, query)
-        return ScrapeResult(platform=self.platform_name, query=query, items=items)
-
-    async def _dom_parse(self, page: Page, query: str) -> list[ScrapedItem]:
-        """Amazon search page is server-rendered — DOM parsing is reliable here."""
+    def _parse_html(self, query: str, html: str) -> list[ScrapedItem]:
         items = []
         try:
-            await page.wait_for_selector("div[data-component-type='s-search-result']", timeout=6000)
-            cards = page.locator("div[data-component-type='s-search-result']")
-            for i in range(min(await cards.count(), 5)):
-                card = cards.nth(i)
+            soup = BeautifulSoup(html, "lxml")
+            cards = soup.select("div[data-component-type='s-search-result']")
+            for card in cards[:5]:
                 try:
-                    name = await card.locator("h2 span, h2 a span").first.inner_text(timeout=2000)
-                    whole = await card.locator(".a-price-whole").first.inner_text(timeout=2000)
-                    frac = "0"
-                    try:
-                        frac = await card.locator(".a-price-fraction").first.inner_text(timeout=1000)
-                    except Exception:
-                        pass
-                    price = float(f"{re.sub(r'[^0-9]', '', whole)}.{frac.strip()}")
-                    unit = ""
-                    try:
-                        unit = await card.locator(".a-size-base.a-color-secondary").first.inner_text(timeout=1000)
-                    except Exception:
-                        pass
-                    image = ""
-                    try:
-                        image = await card.locator("img.s-image").first.get_attribute("src", timeout=1000) or ""
-                    except Exception:
-                        pass
+                    name_el = card.select_one("h2 span, h2 a span")
+                    if not name_el: continue
+                    name = name_el.get_text(strip=True)
+                    whole_el = card.select_one(".a-price-whole")
+                    if not whole_el: continue
+                    whole = re.sub(r"[^0-9]", "", whole_el.get_text())
+                    frac_el = card.select_one(".a-price-fraction")
+                    frac = frac_el.get_text(strip=True) if frac_el else "0"
+                    price = float(f"{whole}.{frac}") if whole else 0
+                    if price == 0: continue
+                    unit_el = card.select_one(".a-size-base.a-color-secondary")
+                    unit = unit_el.get_text(strip=True) if unit_el else ""
+                    img_el = card.select_one("img.s-image")
+                    image = img_el.get("src", "") if img_el else ""
                     items.append(ScrapedItem(
                         platform=self.platform_name, search_query=query,
-                        name=name.strip(), price=price, unit=unit.strip(), image_url=image,
+                        name=name, price=price, unit=unit, image_url=image,
                     ))
-                except Exception:
-                    continue
-        except Exception:
-            pass
+                except Exception: continue
+        except Exception: pass
         return items
