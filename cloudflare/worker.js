@@ -438,6 +438,82 @@ async function flipkart(q, lat, lon) {
   return [];
 }
 
+// ── Debug helper ──────────────────────────────────────────────────────────────
+
+async function debugPlatform(q, lat, lon) {
+  const gr = blinkitGrCookie(lat, lon);
+  const result = { q, lat, lon, gr_cookie: gr, tests: {} };
+
+  // Test 1: Blinkit JSON API
+  try {
+    const r = await fetch(
+      `https://blinkit.com/v6/search/?q=${encodeURIComponent(q)}&start=0&size=5`,
+      {
+        headers: {
+          "User-Agent": MOBILE_UA, Accept: "application/json",
+          app_client: "consumer_web", lat: String(lat), lon: String(lon),
+          Cookie: `gr=${gr}`, Origin: "https://blinkit.com",
+        },
+      }
+    );
+    const text = await r.text();
+    result.tests.blinkit_api = {
+      status: r.status,
+      is_html: text.trimStart().startsWith("<"),
+      preview: text.substring(0, 300),
+    };
+    if (!result.tests.blinkit_api.is_html) {
+      const body = JSON.parse(text);
+      result.tests.blinkit_api.top_keys = Object.keys(body).slice(0, 8);
+    }
+  } catch (e) { result.tests.blinkit_api = { error: e.message }; }
+
+  // Test 2: Blinkit HTML page
+  try {
+    const r2 = await fetch(
+      `https://blinkit.com/s/?q=${encodeURIComponent(q)}&lat=${lat}&lon=${lon}`,
+      {
+        headers: {
+          "User-Agent": DESKTOP_UA, Accept: "text/html",
+          "Accept-Language": "en-IN,en;q=0.9", Cookie: `gr=${gr}`,
+        },
+      }
+    );
+    const html = await r2.text();
+    const nd = extractNextData(html);
+    const raw = nd ? findProductArray(nd, 0) : null;
+    result.tests.blinkit_html = {
+      status: r2.status,
+      has_next_data: !!nd,
+      found_products: !!raw,
+      product_count: raw?.length || 0,
+      first_product: raw?.[0] || null,
+      html_preview: html.substring(0, 200),
+    };
+  } catch (e) { result.tests.blinkit_html = { error: e.message }; }
+
+  // Test 3: BigBasket JSON API
+  try {
+    const r3 = await fetch(
+      `https://www.bigbasket.com/listing-svc/v2/products/?type=ps&q=${encodeURIComponent(q)}&tab_type=%5B%22prd%22%5D&sorted_on=relevance`,
+      { headers: { "User-Agent": DESKTOP_UA, Accept: "application/json", "x-channel": "web" } }
+    );
+    const text = await r3.text();
+    const is_html = text.trimStart().startsWith("<");
+    result.tests.bigbasket = { status: r3.status, is_html, preview: text.substring(0, 300) };
+    if (!is_html) {
+      const body = JSON.parse(text);
+      const items = await bigbasket(q);
+      result.tests.bigbasket.items_found = items.length;
+      result.tests.bigbasket.top_keys = Object.keys(body).slice(0, 8);
+    }
+  } catch (e) { result.tests.bigbasket = { error: e.message }; }
+
+  return result;
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────────
+
 export default {
   async fetch(request) {
     if (request.method === "OPTIONS") {
@@ -445,9 +521,18 @@ export default {
     }
     const url = new URL(request.url);
     const platform = url.pathname.replace(/^\//, "").toLowerCase();
-    const q = url.searchParams.get("q") || "";
+    const q = url.searchParams.get("q") || "milk";
     const lat = parseFloat(url.searchParams.get("lat") || "19.076");
     const lon = parseFloat(url.searchParams.get("lon") || "72.877");
+
+    // Connectivity ping
+    if (platform === "ping") return ok({ ok: true, ts: Date.now() });
+
+    // Detailed debug
+    if (platform === "debug") {
+      const result = await debugPlatform(q, lat, lon);
+      return ok(result);
+    }
 
     if (!q) return ok({ error: "missing q" });
 
