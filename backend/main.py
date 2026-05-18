@@ -32,6 +32,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/healthz")
+async def healthz():
+    return {"status": "ok"}
+
+
 _static_dir = os.path.join(os.path.dirname(__file__), "static")
 
 
