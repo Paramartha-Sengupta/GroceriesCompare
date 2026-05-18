@@ -10,21 +10,31 @@
   .container { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
   h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
   .subtitle { color: #6e6e73; font-size: 14px; margin-bottom: 24px; }
-  .platforms { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+  .platforms { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
   .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
   .card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
   .card label { font-size: 13px; font-weight: 600; color: #6e6e73; display: block; margin-bottom: 8px; }
   .pincode-row { display: flex; align-items: center; gap: 8px; }
-  input[type=tel], input[type=text] { width: 100%; padding: 10px 12px; border: 1.5px solid #e5e5ea; border-radius: 10px; font-size: 16px; outline: none; transition: border 0.2s; }
+  input[type=tel], input[type=text], input[type=url] { width: 100%; padding: 10px 12px; border: 1.5px solid #e5e5ea; border-radius: 10px; font-size: 16px; outline: none; transition: border 0.2s; }
   input:focus { border-color: #34c759; }
   .check { color: #34c759; font-size: 20px; }
-  textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e5e5ea; border-radius: 10px; font-size: 15px; outline: none; resize: none; height: 140px; font-family: inherit; transition: border 0.2s; }
+  textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e5e5ea; border-radius: 10px; font-size: 15px; outline: none; resize: none; height: 130px; font-family: inherit; transition: border 0.2s; }
   textarea:focus { border-color: #34c759; }
   .examples { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-top: 10px; }
   .examples::-webkit-scrollbar { display: none; }
   .ex-btn { white-space: nowrap; padding: 6px 12px; border: 1.5px solid #e5e5ea; border-radius: 20px; font-size: 12px; background: white; color: #3c3c43; cursor: pointer; }
   .compare-btn { width: 100%; padding: 16px; background: #34c759; color: white; font-size: 17px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
   .compare-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Worker setup banner */
+  .worker-banner { background: #fff3cd; border: 1.5px solid #ffc107; border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 13px; }
+  .worker-banner strong { color: #856404; }
+  .worker-banner a { color: #0a58ca; }
+  .worker-url-row { display: flex; gap: 8px; margin-top: 8px; }
+  .worker-url-row input { flex: 1; font-size: 13px; }
+  .save-btn { padding: 8px 14px; background: #34c759; color: white; font-weight: 600; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .worker-set { background: rgba(52,199,89,0.1); border-color: #34c759; }
+  .worker-set strong { color: #1a7a3f; }
 
   /* Progress */
   #progress-view, #results-view { display: none; }
@@ -40,9 +50,10 @@
   .status-sub { font-size: 13px; color: #6e6e73; margin-top: 4px; text-align: center; }
   .platform-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; margin-bottom: 8px; background: #f2f2f7; transition: background 0.3s; }
   .platform-row.done { background: rgba(52,199,89,0.08); }
+  .platform-row.empty { background: rgba(255,149,0,0.06); }
   .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .platform-name { flex: 1; font-size: 15px; }
-  .status-icon { font-size: 18px; }
+  .platform-items { font-size: 12px; color: #6e6e73; margin-left: auto; }
   .spinner { width: 18px; height: 18px; border: 2px solid #e5e5ea; border-top-color: #34c759; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -50,29 +61,31 @@
   .section-header { font-size: 17px; font-weight: 600; margin: 20px 0 10px; }
   .section-sub { font-size: 13px; color: #6e6e73; font-weight: 400; margin-left: 6px; }
 
-  /* Item price chips */
-  .price-row-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-  .price-row-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; text-transform: capitalize; }
-  .price-chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; }
-  .price-chips::-webkit-scrollbar { display: none; }
-  .price-chip { flex-shrink: 0; text-align: center; padding: 8px 10px; border-radius: 10px; background: #f2f2f7; border: 1.5px solid transparent; min-width: 72px; }
-  .price-chip.cheapest { background: rgba(52,199,89,0.1); border-color: #34c759; }
-  .chip-platform { font-size: 9px; color: #6e6e73; font-weight: 500; }
-  .chip-price { font-size: 15px; font-weight: 700; }
-  .chip-price.cheapest { color: #34c759; }
-  .chip-unit { font-size: 9px; color: #8e8e93; }
+  /* Comparison table */
+  .compare-table { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+  .table-header { display: flex; background: #f9f9fb; border-bottom: 1px solid #e5e5ea; }
+  .th-item { flex: 2; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #6e6e73; }
+  .th-plat { flex: 1; padding: 10px 6px; font-size: 10px; font-weight: 600; color: #6e6e73; text-align: center; }
+  .table-row { display: flex; align-items: center; border-bottom: 1px solid #f2f2f7; }
+  .table-row:last-child { border-bottom: none; }
+  .td-item { flex: 2; padding: 12px 14px; font-size: 14px; font-weight: 500; }
+  .td-price { flex: 1; padding: 8px 4px; text-align: center; }
+  .price-val { font-size: 14px; font-weight: 700; }
+  .price-val.best { color: #34c759; }
+  .price-val.na { color: #c7c7cc; font-size: 13px; font-weight: 400; }
+  .price-unit { font-size: 9px; color: #8e8e93; display: block; }
 
-  /* Platform cart totals */
+  /* Cart totals */
   .totals-card { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
   .plat-row { display: flex; align-items: center; padding: 13px 16px; gap: 12px; border-bottom: 1px solid #f2f2f7; }
   .plat-row:last-child { border-bottom: none; }
   .plat-row.best-row { background: rgba(52,199,89,0.06); }
-  .plat-row.na-row { opacity: 0.45; }
+  .plat-row.na-row { opacity: 0.4; }
   .plat-ico { font-size: 20px; width: 28px; text-align: center; }
   .plat-info { flex: 1; }
   .plat-name { font-size: 15px; font-weight: 600; }
   .plat-items-lbl { font-size: 12px; color: #6e6e73; margin-top: 1px; }
-  .plat-total { font-size: 18px; font-weight: 700; text-align: right; }
+  .plat-total { font-size: 18px; font-weight: 700; }
   .best-row .plat-total { color: #34c759; }
   .best-badge { font-size: 9px; font-weight: 700; color: #34c759; background: rgba(52,199,89,0.15); padding: 3px 7px; border-radius: 20px; white-space: nowrap; margin-left: 6px; }
 
@@ -86,7 +99,7 @@
   .cart-card.dimmed { border-color: rgba(0,0,0,0.1); opacity: 0.65; }
   .cart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
   .cart-platform { font-size: 17px; font-weight: 600; }
-  .cart-total-amt { font-size: 20px; font-weight: 700; text-align: right; }
+  .cart-total-amt { font-size: 20px; font-weight: 700; }
   .cart-delivery { font-size: 11px; margin-top: 2px; }
   .free-del { color: #34c759; }
   .paid-del { color: #ff9500; }
@@ -99,8 +112,8 @@
   .error-view { text-align: center; padding: 40px 20px; }
   .error-icon { font-size: 52px; margin-bottom: 16px; }
   .error-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-  .error-msg { color: #6e6e73; font-size: 15px; margin-bottom: 24px; }
-  .no-data-note { font-size: 12px; color: #8e8e93; text-align: center; padding: 12px 16px; background: #f9f9fb; border-radius: 10px; margin-top: 8px; }
+  .error-msg { color: #6e6e73; font-size: 15px; margin-bottom: 24px; line-height: 1.5; }
+  .note { font-size: 12px; color: #8e8e93; text-align: center; padding: 10px 14px; background: #f9f9fb; border-radius: 10px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -109,7 +122,7 @@
 <!-- INPUT VIEW -->
 <div id="input-view">
   <h1>GroceriesCompare</h1>
-  <p class="subtitle">Find the cheapest cart across 6 apps</p>
+  <p class="subtitle">Side-by-side prices across 6 apps</p>
 
   <div class="platforms">
     <span class="pill" style="color:#b8950a;background:#fef9e7">⚡ Blinkit</span>
@@ -118,6 +131,16 @@
     <span class="pill" style="color:#c2410c;background:#fff7ed">🔥 Instamart</span>
     <span class="pill" style="color:#1d4ed8;background:#eff6ff">🌿 AmazonFresh</span>
     <span class="pill" style="color:#1d4ed8;background:#eff6ff">🕐 Flipkart Min</span>
+  </div>
+
+  <!-- Worker URL banner -->
+  <div id="worker-banner" class="worker-banner" style="display:none">
+    <strong id="worker-title">⚙️ One-time setup needed</strong><br>
+    <span id="worker-desc">Enter your Cloudflare Worker URL to fetch live prices from all apps.</span>
+    <div class="worker-url-row">
+      <input type="url" id="worker-url-input" placeholder="https://gc-proxy.YOUR-NAME.workers.dev">
+      <button class="save-btn" onclick="saveWorkerUrl()">Save</button>
+    </div>
   </div>
 
   <div class="card">
@@ -156,8 +179,8 @@
         <div class="ring-sub">of 6</div>
       </div>
     </div>
-    <div class="status-msg" id="status-msg">Starting...</div>
-    <div class="status-sub">Searching all apps in parallel</div>
+    <div class="status-msg" id="status-msg">Starting…</div>
+    <div class="status-sub" id="status-sub">Fetching live prices from your area</div>
   </div>
   <div class="card" style="padding:12px">
     <div id="platform-rows"></div>
@@ -171,16 +194,43 @@
 </div>
 <script>
 const PLATFORMS = [
-  {name:'Blinkit',          color:'#F7C900', icon:'⚡'},
-  {name:'Zepto',            color:'#8B2FC9', icon:'🐇'},
-  {name:'BigBasket',        color:'#84C225', icon:'🧺'},
-  {name:'Instamart',        color:'#FC8019', icon:'🔥'},
-  {name:'AmazonFresh',      color:'#146EB4', icon:'🌿'},
-  {name:'Flipkart Minutes', color:'#2874F0', icon:'🕐'},
+  {key:'blinkit',     name:'Blinkit',          color:'#F7C900', icon:'⚡'},
+  {key:'zepto',       name:'Zepto',             color:'#8B2FC9', icon:'🐇'},
+  {key:'bigbasket',   name:'BigBasket',         color:'#84C225', icon:'🧺'},
+  {key:'instamart',   name:'Instamart',         color:'#FC8019', icon:'🔥'},
+  {key:'amazonfresh', name:'AmazonFresh',       color:'#146EB4', icon:'🌿'},
+  {key:'flipkart',    name:'Flipkart Minutes',  color:'#2874F0', icon:'🕐'},
 ];
 
-let currentJobId = null, pollTimer = null;
+// ── Worker URL setup ──────────────────────────────────────────────────────────
+function getWorkerUrl() { return localStorage.getItem('gcWorkerUrl') || ''; }
 
+function initWorkerBanner() {
+  const url = getWorkerUrl();
+  const banner = document.getElementById('worker-banner');
+  if (!url) {
+    banner.style.display = 'block';
+    banner.className = 'worker-banner';
+    document.getElementById('worker-title').textContent = '⚙️ One-time setup needed';
+    document.getElementById('worker-desc').innerHTML =
+      'Enter your <a href="https://workers.cloudflare.com" target="_blank">Cloudflare Worker</a> URL to get live prices from Blinkit, Zepto, BigBasket & more.';
+  } else {
+    banner.style.display = 'block';
+    banner.className = 'worker-banner worker-set';
+    document.getElementById('worker-title').textContent = '✅ Worker connected';
+    document.getElementById('worker-desc').textContent = url;
+    document.getElementById('worker-url-input').value = url;
+  }
+}
+
+function saveWorkerUrl() {
+  const val = document.getElementById('worker-url-input').value.trim().replace(/\/$/, '');
+  if (!val || !val.startsWith('http')) { alert('Please enter a valid URL starting with https://'); return; }
+  localStorage.setItem('gcWorkerUrl', val);
+  initWorkerBanner();
+}
+
+// ── Input helpers ─────────────────────────────────────────────────────────────
 function onPincodeInput() {
   const v = document.getElementById('pincode').value;
   document.getElementById('pin-check').style.display = v.length===6 ? 'inline' : 'none';
@@ -193,147 +243,202 @@ function updateBtn() {
 }
 document.getElementById('grocery-text').addEventListener('input', updateBtn);
 
-function fillExample(text) {
-  document.getElementById('grocery-text').value = text;
-  updateBtn();
-}
+function fillExample(text) { document.getElementById('grocery-text').value = text; updateBtn(); }
 
 function showView(name) {
-  ['input-view','progress-view','results-view'].forEach(id => {
-    document.getElementById(id).style.display = id===name+'-view' ? 'block' : 'none';
+  ['input','progress','results'].forEach(id => {
+    document.getElementById(id+'-view').style.display = id===name ? 'block' : 'none';
   });
 }
 
-function buildPlatformRows(progress) {
+// ── Progress UI ───────────────────────────────────────────────────────────────
+let platformStatus = {}; // key → {done:0, total:0, found:0}
+
+function initProgress(queries) {
+  platformStatus = {};
   const container = document.getElementById('platform-rows');
   container.innerHTML = '';
-  let doneCount = 0;
   PLATFORMS.forEach(p => {
-    const status = progress ? progress[p.name] : undefined;
-    const isDone = status === 'done';
-    const isError = status && status.startsWith('error');
-    if (isDone) doneCount++;
+    platformStatus[p.key] = { done: 0, total: queries.length, found: 0 };
     const row = document.createElement('div');
-    row.className = 'platform-row' + (isDone ? ' done' : '');
+    row.className = 'platform-row';
+    row.id = 'prow-' + p.key;
     row.innerHTML = `
       <div class="dot" style="background:${p.color}"></div>
       <span style="font-size:16px">${p.icon}</span>
       <span class="platform-name">${p.name}</span>
-      <span class="status-icon">${isDone ? '✅' : isError ? '❌' : '<div class="spinner"></div>'}</span>
+      <span class="platform-items" id="pitems-${p.key}"></span>
+      <span id="pstatus-${p.key}"><div class="spinner"></div></span>
     `;
     container.appendChild(row);
   });
-  return doneCount;
 }
 
-function updateRing(count) {
-  const offset = 283 - (count / 6) * 283;
-  document.getElementById('ring-fill').style.strokeDashoffset = offset;
-  document.getElementById('ring-num').textContent = count;
+function onPlatformQueryDone(key, found) {
+  const st = platformStatus[key];
+  if (!st) return;
+  st.done++;
+  st.found += found ? 1 : 0;
+  const allDone = st.done >= st.total;
+  if (allDone) {
+    const row = document.getElementById('prow-' + key);
+    const icon = document.getElementById('pstatus-' + key);
+    const lbl = document.getElementById('pitems-' + key);
+    if (st.found > 0) {
+      row.className = 'platform-row done';
+      icon.textContent = '✅';
+      lbl.textContent = st.found + '/' + st.total + ' found';
+    } else {
+      row.className = 'platform-row empty';
+      icon.textContent = '—';
+      lbl.textContent = 'no results';
+      lbl.style.color = '#ff9500';
+    }
+  }
+  const totalDone = Object.values(platformStatus).filter(s => s.done >= s.total).length;
+  document.getElementById('ring-fill').style.strokeDashoffset = 283 - (totalDone / 6) * 283;
+  document.getElementById('ring-num').textContent = totalDone;
+  document.getElementById('status-msg').textContent =
+    totalDone < 6 ? `Scanning ${totalDone} of 6 apps…` : 'Crunching numbers…';
 }
+
+// ── Main compare flow ─────────────────────────────────────────────────────────
+let cancelled = false;
 
 async function startCompare() {
   const grocery = document.getElementById('grocery-text').value.trim();
   const pincode = document.getElementById('pincode').value;
+  const workerUrl = getWorkerUrl();
+  cancelled = false;
   showView('progress');
-  buildPlatformRows(null);
-  updateRing(0);
-  document.getElementById('status-msg').textContent = 'Normalising your list...';
 
   try {
-    const resp = await fetch('/compare', {
+    // 1. Normalize
+    document.getElementById('status-msg').textContent = 'Normalising your list…';
+    document.getElementById('status-sub').textContent = 'Identifying items';
+    const normResp = await fetch('/normalize', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({grocery_list: grocery, pincode: pincode})
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({grocery_list: grocery, pincode})
     });
-    const data = await resp.json();
-    currentJobId = data.job_id;
+    const {queries, lat, lon} = await normResp.json();
+    if (cancelled) return;
 
-    const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${wsProto}//${location.host}/ws/${currentJobId}`);
-    let wsDelivered = false;
+    initProgress(queries);
+    document.getElementById('status-sub').textContent = `Searching ${queries.length} item${queries.length>1?'s':''} across 6 apps`;
 
-    ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.event === 'progress') {
-        const count = buildPlatformRows(msg.progress);
-        updateRing(count);
-        document.getElementById('status-msg').textContent =
-          count < 6 ? `Scanning ${count} of 6 apps…` : 'Crunching numbers…';
-      } else if (msg.event === 'done') {
-        wsDelivered = true; ws.close(); showResults(msg.result);
-      } else if (msg.event === 'failed') {
-        wsDelivered = true; ws.close(); showError('Comparison failed on server');
+    // 2. Scrape via CF Worker (client-side, runs at Indian Cloudflare PoP)
+    const scrapedResults = {}; // {platformName: {query: DirectItem}}
+    PLATFORMS.forEach(p => { scrapedResults[p.name] = {}; });
+
+    const fetches = [];
+    for (const query of queries) {
+      for (const plat of PLATFORMS) {
+        const url = workerUrl
+          ? `${workerUrl}/${plat.key}?q=${encodeURIComponent(query)}&lat=${lat}&lon=${lon}`
+          : `/compare-direct`; // fallback handled below
+        if (!workerUrl) {
+          // No worker — skip client scraping, fall through to server scraping
+          break;
+        }
+        fetches.push(
+          fetch(url, {signal: AbortSignal.timeout(20000)})
+            .then(r => r.json())
+            .then(data => {
+              if (cancelled) return;
+              const found = data.items && data.items.length > 0;
+              if (found) {
+                scrapedResults[plat.name][query] = data.items[0];
+              }
+              onPlatformQueryDone(plat.key, found);
+            })
+            .catch(() => onPlatformQueryDone(plat.key, false))
+        );
       }
-    };
-    ws.onerror = () => { if (!wsDelivered) startPolling(); };
-    ws.onclose = () => { if (!wsDelivered) startPolling(); };
+      if (!workerUrl) break;
+    }
+
+    if (workerUrl) {
+      await Promise.all(fetches);
+    }
+    if (cancelled) return;
+
+    // 3. Optimize
+    document.getElementById('status-msg').textContent = 'Finding cheapest combination…';
+    const compareResp = await fetch('/compare-direct', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({queries, results: scrapedResults})
+    });
+    const result = await compareResp.json();
+    if (cancelled) return;
+    showResults(result);
+
   } catch(e) {
-    showError('Could not reach server: ' + e.message);
+    if (!cancelled) showError(e.message);
   }
 }
 
-function startPolling() {
-  pollTimer = setInterval(async () => {
-    try {
-      const resp = await fetch(`/compare/${currentJobId}`);
-      const data = await resp.json();
-      if (data.progress) { const count = buildPlatformRows(data.progress); updateRing(count); }
-      if (data.status === 'done') { clearInterval(pollTimer); showResults(data.result); }
-      else if (data.status === 'failed') { clearInterval(pollTimer); showError('Comparison failed'); }
-    } catch(e) {}
-  }, 2000);
-}
-
-function cancelCompare() { clearInterval(pollTimer); showView('input'); }
+function cancelCompare() { cancelled = true; showView('input'); }
 function fmt(n) { return '₹' + Math.round(n); }
 
+// ── Results ───────────────────────────────────────────────────────────────────
 function showResults(result) {
   let html = '';
 
-  // ── Build per-platform totals from price_matrix ──────────────────────
+  // Build per-platform totals
   const platData = {};
   PLATFORMS.forEach(p => { platData[p.name] = {icon:p.icon, color:p.color, total:0, count:0}; });
   result.price_matrix.forEach(row => {
     row.prices.forEach(p => {
-      if (platData[p.platform]) {
-        platData[p.platform].total += p.price;
-        platData[p.platform].count++;
-      }
+      if (platData[p.platform]) { platData[p.platform].total += p.price; platData[p.platform].count++; }
     });
   });
-  const totalQueryCount = result.price_matrix.filter(r => r.prices.length > 0).length;
-  const platsWithData = Object.entries(platData)
-    .filter(([, v]) => v.count > 0)
-    .sort((a, b) => a[1].total - b[1].total);
+  const validRows = result.price_matrix.filter(r => r.prices.length > 0);
+  const totalItems = validRows.length;
+  const platsWithData = Object.entries(platData).filter(([,v]) => v.count > 0).sort((a,b) => a[1].total - b[1].total);
   const unavailPlats = PLATFORMS.filter(p => !platData[p.name]?.count);
 
-  // ── SECTION 1: Item-by-item prices ───────────────────────────────────
-  html += `<div class="section-header">Prices by Item <span class="section-sub">cheapest in green</span></div>`;
+  // ── 1. Side-by-side comparison table ────────────────────────────────────────
+  if (validRows.length > 0) {
+    const activePlats = platsWithData.map(([n]) => n);
+    html += `<div class="section-header">Price Comparison <span class="section-sub">per item</span></div>`;
+    html += `<div class="compare-table">`;
 
-  let hasAnyItem = false;
-  result.price_matrix.forEach(row => {
-    if (row.prices.length === 0) return;
-    hasAnyItem = true;
-    const sorted = [...row.prices].sort((a, b) => a.price - b.price);
-    html += `<div class="price-row-card">
-      <div class="price-row-title">${row.query}</div>
-      <div class="price-chips">`;
-    sorted.forEach(p => {
-      const cheap = p.platform === row.cheapest_platform;
-      html += `<div class="price-chip ${cheap?'cheapest':''}">
-        <div class="chip-platform">${p.platform.replace(' Minutes','').replace('AmazonFresh','Amazon')}</div>
-        <div class="chip-price ${cheap?'cheapest':''}">${fmt(p.price)}</div>
-        ${p.unit ? `<div class="chip-unit">${p.unit}</div>` : ''}
-      </div>`;
+    // Header row
+    html += `<div class="table-header"><div class="th-item">Item</div>`;
+    activePlats.forEach(name => {
+      const p = PLATFORMS.find(x => x.name === name);
+      html += `<div class="th-plat">${p.icon}<br>${name.replace(' Minutes','').replace('AmazonFresh','Amazon')}</div>`;
     });
-    html += `</div></div>`;
-  });
+    html += `</div>`;
 
-  if (!hasAnyItem) {
-    html += `<div class="card" style="text-align:center;color:#6e6e73;padding:20px">No price data returned.</div>`;
+    // Data rows
+    validRows.forEach(row => {
+      const priceMap = {};
+      row.prices.forEach(p => { priceMap[p.platform] = p; });
+      const prices = activePlats.map(n => priceMap[n]?.price).filter(Boolean);
+      const minPrice = prices.length ? Math.min(...prices) : null;
+
+      html += `<div class="table-row"><div class="td-item">${row.query}</div>`;
+      activePlats.forEach(name => {
+        const item = priceMap[name];
+        html += `<div class="td-price">`;
+        if (item) {
+          const isBest = item.price === minPrice;
+          html += `<span class="price-val ${isBest?'best':''}">${fmt(item.price)}</span>`;
+          if (item.unit) html += `<span class="price-unit">${item.unit}</span>`;
+        } else {
+          html += `<span class="price-val na">—</span>`;
+        }
+        html += `</div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
   }
 
+  // Unmatched
   if (result.unmatched_items.length > 0) {
     html += `<div class="unmatched"><span style="font-size:20px">⚠️</span>
       <div><div style="font-weight:600;color:#e67700">Not found anywhere</div>
@@ -341,72 +446,66 @@ function showResults(result) {
       </div></div>`;
   }
 
-  // ── SECTION 2: Cart totals per platform ──────────────────────────────
-  html += `<div class="section-header" style="margin-top:24px">Cart Total by App <span class="section-sub">cheapest first</span></div>`;
-  html += `<div class="totals-card">`;
-
-  platsWithData.forEach(([name, data], idx) => {
-    const isBest = idx === 0;
-    const itemLbl = data.count === totalQueryCount ? 'All items found' : `${data.count} of ${totalQueryCount} items`;
-    html += `<div class="plat-row ${isBest?'best-row':''}">
-      <span class="plat-ico">${data.icon}</span>
-      <div class="plat-info">
-        <div class="plat-name">${name}</div>
-        <div class="plat-items-lbl">${itemLbl}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <div class="plat-total">${fmt(data.total)}</div>
-        ${isBest ? '<span class="best-badge">CHEAPEST</span>' : ''}
-      </div>
-    </div>`;
-  });
-
-  unavailPlats.forEach(p => {
-    html += `<div class="plat-row na-row">
-      <span class="plat-ico">${p.icon}</span>
-      <div class="plat-info">
-        <div class="plat-name">${p.name}</div>
-        <div class="plat-items-lbl">Not available from server region</div>
-      </div>
-      <div class="plat-total" style="color:#8e8e93">—</div>
-    </div>`;
-  });
-
-  html += `</div>`;
-
-  if (unavailPlats.length > 0) {
-    html += `<div class="no-data-note">⚠️ Some apps block requests from cloud servers. Prices shown are from available platforms only.</div>`;
+  // ── 2. Cart totals ───────────────────────────────────────────────────────────
+  if (platsWithData.length > 0) {
+    html += `<div class="section-header" style="margin-top:24px">Total Cart <span class="section-sub">cheapest first</span></div>`;
+    html += `<div class="totals-card">`;
+    platsWithData.forEach(([name, data], idx) => {
+      const isBest = idx === 0;
+      const lbl = data.count === totalItems ? 'All items' : `${data.count} of ${totalItems} items`;
+      html += `<div class="plat-row ${isBest?'best-row':''}">
+        <span class="plat-ico">${data.icon}</span>
+        <div class="plat-info"><div class="plat-name">${name}</div><div class="plat-items-lbl">${lbl}</div></div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="plat-total">${fmt(data.total)}</div>
+          ${isBest?'<span class="best-badge">CHEAPEST</span>':''}
+        </div>
+      </div>`;
+    });
+    unavailPlats.forEach(p => {
+      html += `<div class="plat-row na-row">
+        <span class="plat-ico">${p.icon}</span>
+        <div class="plat-info"><div class="plat-name">${p.name}</div><div class="plat-items-lbl">No results</div></div>
+        <div class="plat-total" style="color:#c7c7cc">—</div>
+      </div>`;
+    });
+    html += `</div>`;
   }
 
-  // ── SECTION 3: Recommendation ────────────────────────────────────────
-  html += `<div class="section-header" style="margin-top:24px">Recommendation</div>`;
-
-  const isSplit = result.recommended_carts.length > 1;
-  if (result.total_savings > 0) {
-    html += `<div class="savings-banner">
-      <div>
-        <div class="savings-label">${isSplit ? 'Split order — best deal' : 'Best single app'}</div>
-        <div class="savings-amount">₹${Math.round(result.total_savings)} saved</div>
-        <div class="savings-sub">${result.savings_pct.toFixed(1)}% cheaper than most expensive option</div>
-      </div>
-      <div class="rupee-icon">₹</div>
-    </div>`;
-    result.recommended_carts.forEach(cart => { html += cartCardHTML(cart, false); });
-    if (isSplit && result.single_best_cart) {
-      html += `<div style="font-size:13px;color:#6e6e73;margin:10px 0 6px">vs. ordering everything from one app:</div>`;
-      html += cartCardHTML(result.single_best_cart, true);
+  // ── 3. Recommendation ────────────────────────────────────────────────────────
+  const isSplit = result.recommended_carts && result.recommended_carts.length > 1;
+  if (result.total_savings > 0 || result.single_best_cart || (result.recommended_carts && result.recommended_carts.length)) {
+    html += `<div class="section-header" style="margin-top:24px">Recommendation</div>`;
+    if (result.total_savings > 0) {
+      html += `<div class="savings-banner">
+        <div>
+          <div class="savings-label">${isSplit ? 'Split order — best deal' : 'Best single app'}</div>
+          <div class="savings-amount">₹${Math.round(result.total_savings)} saved</div>
+          <div class="savings-sub">${result.savings_pct?.toFixed(1)}% cheaper than costliest option</div>
+        </div>
+        <div class="rupee-icon">₹</div>
+      </div>`;
+      (result.recommended_carts || []).forEach(cart => { html += cartCardHTML(cart, false); });
+      if (isSplit && result.single_best_cart) {
+        html += `<div style="font-size:13px;color:#6e6e73;margin:10px 0 6px">vs. one app only:</div>`;
+        html += cartCardHTML(result.single_best_cart, true);
+      }
+    } else if (result.single_best_cart) {
+      html += cartCardHTML(result.single_best_cart, false);
+    } else if (platsWithData.length > 0) {
+      const [bestName, bestData] = platsWithData[0];
+      html += `<div class="cart-card">
+        <div class="cart-header">
+          <div class="cart-platform">${bestData.icon} ${bestName}</div>
+          <div class="cart-total-amt">${fmt(bestData.total)}</div>
+        </div>
+        <div style="font-size:13px;color:#6e6e73">Cheapest available option</div>
+      </div>`;
     }
-  } else if (result.single_best_cart) {
-    html += cartCardHTML(result.single_best_cart, false);
-  } else if (platsWithData.length > 0) {
-    const [bestName, bestData] = platsWithData[0];
-    html += `<div class="cart-card">
-      <div class="cart-header">
-        <div class="cart-platform">${bestData.icon} ${bestName}</div>
-        <div class="cart-total-amt">${fmt(bestData.total)}</div>
-      </div>
-      <div style="font-size:13px;color:#6e6e73">Cheapest available option for your list</div>
-    </div>`;
+  }
+
+  if (platsWithData.length < 6) {
+    html += `<div class="note">Some platforms returned no results for your pincode/items.</div>`;
   }
 
   html += `<button class="back-btn" onclick="showView('input')">← Compare Again</button>`;
@@ -417,7 +516,7 @@ function showResults(result) {
 }
 
 function cartCardHTML(cart, dimmed) {
-  const tags = cart.items.map(i => `<span class="tag">${i}</span>`).join('');
+  const tags = (cart.items || []).map(i => `<span class="tag">${i}</span>`).join('');
   const delHTML = cart.delivery_fee > 0
     ? `<div class="cart-delivery paid-del">+ ₹${Math.round(cart.delivery_fee)} delivery</div>`
     : `<div class="cart-delivery free-del">Free delivery</div>`;
@@ -440,6 +539,9 @@ function showError(msg) {
   </div>`;
   showView('results');
 }
+
+// Init
+initWorkerBanner();
 </script>
 </body>
 </html>
