@@ -440,76 +440,109 @@ async function flipkart(q, lat, lon) {
 
 // ── Debug helper ──────────────────────────────────────────────────────────────
 
+async function probe(label, fetchPromise) {
+  try {
+    const r = await fetchPromise;
+    const text = await r.text();
+    const isHtml = text.trimStart().startsWith("<");
+    const out = { status: r.status, is_html: isHtml, len: text.length };
+    if (!isHtml) {
+      try {
+        const body = JSON.parse(text);
+        out.json_keys = Object.keys(body).slice(0, 6);
+        const arr = findProductArray(body, 0);
+        out.products_found = arr?.length || 0;
+        if (arr?.[0]) out.sample = { name: parseName(arr[0]), price: parsePrice(arr[0]) };
+      } catch { out.parse_error = true; }
+    } else {
+      out.preview = text.substring(0, 120).replace(/\s+/g, " ");
+      const nd = extractNextData(text);
+      out.has_next_data = !!nd;
+      if (nd) {
+        const arr = findProductArray(nd, 0);
+        out.products_in_next_data = arr?.length || 0;
+        if (arr?.[0]) out.sample = { name: parseName(arr[0]), price: parsePrice(arr[0]) };
+      }
+    }
+    return out;
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
 async function debugPlatform(q, lat, lon) {
   const gr = blinkitGrCookie(lat, lon);
-  const result = { q, lat, lon, gr_cookie: gr, tests: {} };
+  const enc = encodeURIComponent(q);
 
-  // Test 1: Blinkit JSON API
-  try {
-    const r = await fetch(
-      `https://blinkit.com/v6/search/?q=${encodeURIComponent(q)}&start=0&size=5`,
-      {
-        headers: {
-          "User-Agent": MOBILE_UA, Accept: "application/json",
-          app_client: "consumer_web", lat: String(lat), lon: String(lon),
-          Cookie: `gr=${gr}`, Origin: "https://blinkit.com",
-        },
-      }
-    );
-    const text = await r.text();
-    result.tests.blinkit_api = {
-      status: r.status,
-      is_html: text.trimStart().startsWith("<"),
-      preview: text.substring(0, 300),
-    };
-    if (!result.tests.blinkit_api.is_html) {
-      const body = JSON.parse(text);
-      result.tests.blinkit_api.top_keys = Object.keys(body).slice(0, 8);
-    }
-  } catch (e) { result.tests.blinkit_api = { error: e.message }; }
+  const [blinkitApi, blinkitHtml, blinkitPlain, bbHtml, bbApi, zepto, instamart, flipkart, amazon] =
+    await Promise.all([
+      // Blinkit JSON API (with gr cookie + lat/lon headers)
+      probe("blinkit_api", fetch(
+        `https://blinkit.com/v6/search/?q=${enc}&start=0&size=5`,
+        { headers: { "User-Agent": MOBILE_UA, Accept: "application/json",
+            app_client: "consumer_web", lat: String(lat), lon: String(lon),
+            Cookie: `gr=${gr}`, Origin: "https://blinkit.com" } }
+      )),
+      // Blinkit HTML search (with gr cookie)
+      probe("blinkit_html", fetch(
+        `https://blinkit.com/s/?q=${enc}&lat=${lat}&lon=${lon}`,
+        { headers: { "User-Agent": DESKTOP_UA, Accept: "text/html",
+            "Accept-Language": "en-IN,en;q=0.9", Cookie: `gr=${gr}` } }
+      )),
+      // Blinkit HTML search – plain (no cookie, bare minimum headers)
+      probe("blinkit_plain", fetch(
+        `https://blinkit.com/s/?q=${enc}`,
+        { headers: { "User-Agent": DESKTOP_UA } }
+      )),
+      // BigBasket HTML search page
+      probe("bb_html", fetch(
+        `https://www.bigbasket.com/ps/?q=${enc}`,
+        { headers: { "User-Agent": DESKTOP_UA, Accept: "text/html",
+            "Accept-Language": "en-IN,en;q=0.9" } }
+      )),
+      // BigBasket JSON API
+      probe("bb_api", fetch(
+        `https://www.bigbasket.com/listing-svc/v2/products/?type=ps&q=${enc}&tab_type=%5B%22prd%22%5D&sorted_on=relevance`,
+        { headers: { "User-Agent": DESKTOP_UA, Accept: "application/json", "x-channel": "web" } }
+      )),
+      // Zepto
+      probe("zepto", fetch(
+        `https://api.zeptonow.com/api/v1/search?query=${enc}&pageNumber=0&pageSize=5&version=5`,
+        { headers: { "User-Agent": MOBILE_UA, Accept: "application/json",
+            latitude: String(lat), longitude: String(lon) } }
+      )),
+      // Swiggy Instamart
+      probe("instamart", fetch(
+        `https://www.swiggy.com/api/instamart/search?pageNumber=0&limit=5&query=${enc}&pageType=INSTAMART_SEARCH_PAGE`,
+        { headers: { "User-Agent": MOBILE_UA, Accept: "application/json",
+            Origin: "https://www.swiggy.com" } }
+      )),
+      // Flipkart Minutes
+      probe("flipkart", fetch(
+        `https://minutes.flipkart.com/api/4/page?q=${enc}&type=search`,
+        { headers: { "User-Agent": MOBILE_UA, Accept: "application/json",
+            "X-User-Agent": "FKUA/app/42/42.0/ios; Mobile" } }
+      )),
+      // Amazon Fresh (known working)
+      probe("amazonfresh", fetch(
+        `https://www.amazon.in/s?k=${enc}&i=grocery&rh=n%3A5940050031`,
+        { headers: { "User-Agent": DESKTOP_UA, Accept: "text/html",
+            "Accept-Language": "en-IN,en;q=0.9" } }
+      )),
+    ]);
 
-  // Test 2: Blinkit HTML page
-  try {
-    const r2 = await fetch(
-      `https://blinkit.com/s/?q=${encodeURIComponent(q)}&lat=${lat}&lon=${lon}`,
-      {
-        headers: {
-          "User-Agent": DESKTOP_UA, Accept: "text/html",
-          "Accept-Language": "en-IN,en;q=0.9", Cookie: `gr=${gr}`,
-        },
-      }
-    );
-    const html = await r2.text();
-    const nd = extractNextData(html);
-    const raw = nd ? findProductArray(nd, 0) : null;
-    result.tests.blinkit_html = {
-      status: r2.status,
-      has_next_data: !!nd,
-      found_products: !!raw,
-      product_count: raw?.length || 0,
-      first_product: raw?.[0] || null,
-      html_preview: html.substring(0, 200),
-    };
-  } catch (e) { result.tests.blinkit_html = { error: e.message }; }
-
-  // Test 3: BigBasket JSON API
-  try {
-    const r3 = await fetch(
-      `https://www.bigbasket.com/listing-svc/v2/products/?type=ps&q=${encodeURIComponent(q)}&tab_type=%5B%22prd%22%5D&sorted_on=relevance`,
-      { headers: { "User-Agent": DESKTOP_UA, Accept: "application/json", "x-channel": "web" } }
-    );
-    const text = await r3.text();
-    const is_html = text.trimStart().startsWith("<");
-    result.tests.bigbasket = { status: r3.status, is_html, preview: text.substring(0, 300) };
-    if (!is_html) {
-      const body = JSON.parse(text);
-      const items = await bigbasket(q);
-      result.tests.bigbasket.items_found = items.length;
-      result.tests.bigbasket.top_keys = Object.keys(body).slice(0, 8);
-    }
-  } catch (e) { result.tests.bigbasket = { error: e.message }; }
-
-  return result;
+  return {
+    q, lat, lon,
+    blinkit_api: blinkitApi,
+    blinkit_html: blinkitHtml,
+    blinkit_plain: blinkitPlain,
+    bigbasket_html: bbHtml,
+    bigbasket_api: bbApi,
+    zepto,
+    instamart,
+    flipkart,
+    amazonfresh: amazon,
+  };
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
