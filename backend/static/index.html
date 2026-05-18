@@ -25,6 +25,7 @@
   .ex-btn { white-space: nowrap; padding: 6px 12px; border: 1.5px solid #e5e5ea; border-radius: 20px; font-size: 12px; background: white; color: #3c3c43; cursor: pointer; }
   .compare-btn { width: 100%; padding: 16px; background: #34c759; color: white; font-size: 17px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
   .compare-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
   /* Progress */
   #progress-view, #results-view { display: none; }
   .ring-wrap { display: flex; flex-direction: column; align-items: center; padding: 32px 0 24px; }
@@ -44,41 +45,62 @@
   .status-icon { font-size: 18px; }
   .spinner { width: 18px; height: 18px; border: 2px solid #e5e5ea; border-top-color: #34c759; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
   /* Results */
-  .savings-banner { background: linear-gradient(135deg, #1a7a3f, #20a050); border-radius: 16px; padding: 20px; color: white; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .section-header { font-size: 17px; font-weight: 600; margin: 20px 0 10px; }
+  .section-sub { font-size: 13px; color: #6e6e73; font-weight: 400; margin-left: 6px; }
+
+  /* Item price chips */
+  .price-row-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .price-row-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; text-transform: capitalize; }
+  .price-chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; }
+  .price-chips::-webkit-scrollbar { display: none; }
+  .price-chip { flex-shrink: 0; text-align: center; padding: 8px 10px; border-radius: 10px; background: #f2f2f7; border: 1.5px solid transparent; min-width: 72px; }
+  .price-chip.cheapest { background: rgba(52,199,89,0.1); border-color: #34c759; }
+  .chip-platform { font-size: 9px; color: #6e6e73; font-weight: 500; }
+  .chip-price { font-size: 15px; font-weight: 700; }
+  .chip-price.cheapest { color: #34c759; }
+  .chip-unit { font-size: 9px; color: #8e8e93; }
+
+  /* Platform cart totals */
+  .totals-card { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+  .plat-row { display: flex; align-items: center; padding: 13px 16px; gap: 12px; border-bottom: 1px solid #f2f2f7; }
+  .plat-row:last-child { border-bottom: none; }
+  .plat-row.best-row { background: rgba(52,199,89,0.06); }
+  .plat-row.na-row { opacity: 0.45; }
+  .plat-ico { font-size: 20px; width: 28px; text-align: center; }
+  .plat-info { flex: 1; }
+  .plat-name { font-size: 15px; font-weight: 600; }
+  .plat-items-lbl { font-size: 12px; color: #6e6e73; margin-top: 1px; }
+  .plat-total { font-size: 18px; font-weight: 700; text-align: right; }
+  .best-row .plat-total { color: #34c759; }
+  .best-badge { font-size: 9px; font-weight: 700; color: #34c759; background: rgba(52,199,89,0.15); padding: 3px 7px; border-radius: 20px; white-space: nowrap; margin-left: 6px; }
+
+  /* Recommendation */
+  .savings-banner { background: linear-gradient(135deg, #1a7a3f, #20a050); border-radius: 16px; padding: 20px; color: white; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
   .savings-amount { font-size: 36px; font-weight: 700; line-height: 1; }
   .savings-label { font-size: 13px; opacity: 0.85; margin-bottom: 6px; }
   .savings-sub { font-size: 12px; opacity: 0.75; margin-top: 4px; }
   .rupee-icon { font-size: 48px; opacity: 0.25; }
-  .section-header { font-size: 17px; font-weight: 600; margin: 20px 0 10px; }
-  .section-sub { font-size: 13px; color: #6e6e73; font-weight: 400; margin-left: 6px; }
-  .cart-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; border: 1.5px solid rgba(52,199,89,0.3); }
+  .cart-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 10px; border: 1.5px solid rgba(52,199,89,0.3); }
   .cart-card.dimmed { border-color: rgba(0,0,0,0.1); opacity: 0.65; }
   .cart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
   .cart-platform { font-size: 17px; font-weight: 600; }
-  .cart-total { font-size: 20px; font-weight: 700; text-align: right; }
+  .cart-total-amt { font-size: 20px; font-weight: 700; text-align: right; }
   .cart-delivery { font-size: 11px; margin-top: 2px; }
   .free-del { color: #34c759; }
   .paid-del { color: #ff9500; }
   .cart-meta { font-size: 12px; color: #6e6e73; display: flex; justify-content: space-between; margin-bottom: 10px; }
   .tags { display: flex; flex-wrap: wrap; gap: 5px; }
   .tag { font-size: 11px; padding: 3px 8px; background: #f2f2f7; border-radius: 20px; }
-  .price-row-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid #e5e5ea; }
-  .price-row-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; text-transform: capitalize; }
-  .price-chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; }
-  .price-chips::-webkit-scrollbar { display: none; }
-  .price-chip { flex-shrink: 0; text-align: center; padding: 8px 10px; border-radius: 10px; background: #f2f2f7; border: 1.5px solid transparent; min-width: 70px; }
-  .price-chip.cheapest { background: rgba(52,199,89,0.1); border-color: #34c759; }
-  .chip-platform { font-size: 9px; color: #6e6e73; font-weight: 500; }
-  .chip-price { font-size: 15px; font-weight: 700; }
-  .chip-price.cheapest { color: #34c759; }
-  .chip-unit { font-size: 9px; color: #6e6e73; }
+
   .unmatched { background: rgba(255,149,0,0.08); border-radius: 12px; padding: 14px; display: flex; gap: 10px; margin-bottom: 12px; }
   .back-btn { width: 100%; padding: 14px; background: #f2f2f7; color: #1c1c1e; font-size: 16px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; margin-top: 8px; }
   .error-view { text-align: center; padding: 40px 20px; }
   .error-icon { font-size: 52px; margin-bottom: 16px; }
   .error-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
   .error-msg { color: #6e6e73; font-size: 15px; margin-bottom: 24px; }
+  .no-data-note { font-size: 12px; color: #8e8e93; text-align: center; padding: 12px 16px; background: #f9f9fb; border-radius: 10px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -137,11 +159,9 @@
     <div class="status-msg" id="status-msg">Starting...</div>
     <div class="status-sub">Searching all apps in parallel</div>
   </div>
-
   <div class="card" style="padding:12px">
     <div id="platform-rows"></div>
   </div>
-
   <button class="back-btn" onclick="cancelCompare()">Cancel</button>
 </div>
 
@@ -151,16 +171,15 @@
 </div>
 <script>
 const PLATFORMS = [
-  {name:'Blinkit',      color:'#F7C900', icon:'⚡'},
-  {name:'Zepto',        color:'#8B2FC9', icon:'🐇'},
-  {name:'BigBasket',    color:'#84C225', icon:'🧺'},
-  {name:'Instamart',    color:'#FC8019', icon:'🔥'},
-  {name:'AmazonFresh',  color:'#146EB4', icon:'🌿'},
+  {name:'Blinkit',          color:'#F7C900', icon:'⚡'},
+  {name:'Zepto',            color:'#8B2FC9', icon:'🐇'},
+  {name:'BigBasket',        color:'#84C225', icon:'🧺'},
+  {name:'Instamart',        color:'#FC8019', icon:'🔥'},
+  {name:'AmazonFresh',      color:'#146EB4', icon:'🌿'},
   {name:'Flipkart Minutes', color:'#2874F0', icon:'🕐'},
 ];
 
-let currentJobId = null;
-let pollTimer = null;
+let currentJobId = null, pollTimer = null;
 
 function onPincodeInput() {
   const v = document.getElementById('pincode').value;
@@ -208,8 +227,7 @@ function buildPlatformRows(progress) {
 }
 
 function updateRing(count) {
-  const circumference = 283;
-  const offset = circumference - (count / 6) * circumference;
+  const offset = 283 - (count / 6) * 283;
   document.getElementById('ring-fill').style.strokeDashoffset = offset;
   document.getElementById('ring-num').textContent = count;
 }
@@ -220,7 +238,7 @@ async function startCompare() {
   showView('progress');
   buildPlatformRows(null);
   updateRing(0);
-  document.getElementById('status-msg').textContent = 'Normalizing your list...';
+  document.getElementById('status-msg').textContent = 'Normalising your list...';
 
   try {
     const resp = await fetch('/compare', {
@@ -231,7 +249,6 @@ async function startCompare() {
     const data = await resp.json();
     currentJobId = data.job_id;
 
-    // Try WebSocket first
     const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${wsProto}//${location.host}/ws/${currentJobId}`);
     let wsDelivered = false;
@@ -242,20 +259,15 @@ async function startCompare() {
         const count = buildPlatformRows(msg.progress);
         updateRing(count);
         document.getElementById('status-msg').textContent =
-          count < 6 ? `Scanned ${count} of 6 apps...` : 'Crunching numbers...';
+          count < 6 ? `Scanning ${count} of 6 apps…` : 'Crunching numbers…';
       } else if (msg.event === 'done') {
-        wsDelivered = true;
-        ws.close();
-        showResults(msg.result);
+        wsDelivered = true; ws.close(); showResults(msg.result);
       } else if (msg.event === 'failed') {
-        wsDelivered = true;
-        ws.close();
-        showError('Comparison failed on server');
+        wsDelivered = true; ws.close(); showError('Comparison failed on server');
       }
     };
     ws.onerror = () => { if (!wsDelivered) startPolling(); };
     ws.onclose = () => { if (!wsDelivered) startPolling(); };
-
   } catch(e) {
     showError('Could not reach server: ' + e.message);
   }
@@ -266,73 +278,51 @@ function startPolling() {
     try {
       const resp = await fetch(`/compare/${currentJobId}`);
       const data = await resp.json();
-      if (data.progress) {
-        const count = buildPlatformRows(data.progress);
-        updateRing(count);
-      }
-      if (data.status === 'done') {
-        clearInterval(pollTimer);
-        showResults(data.result);
-      } else if (data.status === 'failed') {
-        clearInterval(pollTimer);
-        showError('Comparison failed');
-      }
+      if (data.progress) { const count = buildPlatformRows(data.progress); updateRing(count); }
+      if (data.status === 'done') { clearInterval(pollTimer); showResults(data.result); }
+      else if (data.status === 'failed') { clearInterval(pollTimer); showError('Comparison failed'); }
     } catch(e) {}
   }, 2000);
 }
 
-function cancelCompare() {
-  clearInterval(pollTimer);
-  showView('input');
-}
-
+function cancelCompare() { clearInterval(pollTimer); showView('input'); }
 function fmt(n) { return '₹' + Math.round(n); }
 
 function showResults(result) {
-  const isSplit = result.recommended_carts.length > 1;
   let html = '';
 
-  // Savings banner
-  if (result.total_savings > 0) {
-    html += `<div class="savings-banner">
-      <div>
-        <div class="savings-label">${isSplit ? 'Split & save' : 'You save'}</div>
-        <div class="savings-amount">₹${Math.round(result.total_savings)}</div>
-        <div class="savings-sub">${result.savings_pct.toFixed(1)}% cheaper than best single app</div>
-      </div>
-      <div class="rupee-icon">₹</div>
-    </div>`;
-  } else if (result.single_best_cart) {
-    html += `<div class="cart-card" style="display:flex;align-items:center;gap:12px">
-      <span style="color:#34c759;font-size:22px">✅</span>
-      <div><div style="font-size:13px;color:#6e6e73">Best single app</div>
-      <div style="font-size:17px;font-weight:700">${result.single_best_cart.platform}</div></div>
-      <div style="margin-left:auto;font-size:20px;font-weight:700">${fmt(result.single_best_cart.total)}</div>
-    </div>`;
-  }
+  // ── Build per-platform totals from price_matrix ──────────────────────
+  const platData = {};
+  PLATFORMS.forEach(p => { platData[p.name] = {icon:p.icon, color:p.color, total:0, count:0}; });
+  result.price_matrix.forEach(row => {
+    row.prices.forEach(p => {
+      if (platData[p.platform]) {
+        platData[p.platform].total += p.price;
+        platData[p.platform].count++;
+      }
+    });
+  });
+  const totalQueryCount = result.price_matrix.filter(r => r.prices.length > 0).length;
+  const platsWithData = Object.entries(platData)
+    .filter(([, v]) => v.count > 0)
+    .sort((a, b) => a[1].total - b[1].total);
+  const unavailPlats = PLATFORMS.filter(p => !platData[p.name]?.count);
 
-  // Recommended carts
-  html += `<div class="section-header">${isSplit ? 'Optimal Split' : 'Best App'}<span class="section-sub">${isSplit ? `Buy from ${result.recommended_carts.length} apps` : 'All items cheapest here'}</span></div>`;
-  result.recommended_carts.forEach(cart => { html += cartCardHTML(cart, false); });
+  // ── SECTION 1: Item-by-item prices ───────────────────────────────────
+  html += `<div class="section-header">Prices by Item <span class="section-sub">cheapest in green</span></div>`;
 
-  // Single app comparison
-  if (isSplit && result.single_best_cart) {
-    html += `<div class="section-header">vs. One App<span class="section-sub">If you ordered from ${result.single_best_cart.platform}</span></div>`;
-    html += cartCardHTML(result.single_best_cart, true);
-  }
-
-  // Price matrix
-  html += `<div class="section-header">Item Breakdown<span class="section-sub">Cheapest in green</span></div>`;
+  let hasAnyItem = false;
   result.price_matrix.forEach(row => {
     if (row.prices.length === 0) return;
-    const sorted = [...row.prices].sort((a,b) => a.price - b.price);
+    hasAnyItem = true;
+    const sorted = [...row.prices].sort((a, b) => a.price - b.price);
     html += `<div class="price-row-card">
       <div class="price-row-title">${row.query}</div>
       <div class="price-chips">`;
     sorted.forEach(p => {
       const cheap = p.platform === row.cheapest_platform;
       html += `<div class="price-chip ${cheap?'cheapest':''}">
-        <div class="chip-platform">${p.platform.replace(' Minutes','')}</div>
+        <div class="chip-platform">${p.platform.replace(' Minutes','').replace('AmazonFresh','Amazon')}</div>
         <div class="chip-price ${cheap?'cheapest':''}">${fmt(p.price)}</div>
         ${p.unit ? `<div class="chip-unit">${p.unit}</div>` : ''}
       </div>`;
@@ -340,7 +330,10 @@ function showResults(result) {
     html += `</div></div>`;
   });
 
-  // Unmatched
+  if (!hasAnyItem) {
+    html += `<div class="card" style="text-align:center;color:#6e6e73;padding:20px">No price data returned.</div>`;
+  }
+
   if (result.unmatched_items.length > 0) {
     html += `<div class="unmatched"><span style="font-size:20px">⚠️</span>
       <div><div style="font-weight:600;color:#e67700">Not found anywhere</div>
@@ -348,12 +341,79 @@ function showResults(result) {
       </div></div>`;
   }
 
+  // ── SECTION 2: Cart totals per platform ──────────────────────────────
+  html += `<div class="section-header" style="margin-top:24px">Cart Total by App <span class="section-sub">cheapest first</span></div>`;
+  html += `<div class="totals-card">`;
+
+  platsWithData.forEach(([name, data], idx) => {
+    const isBest = idx === 0;
+    const itemLbl = data.count === totalQueryCount ? 'All items found' : `${data.count} of ${totalQueryCount} items`;
+    html += `<div class="plat-row ${isBest?'best-row':''}">
+      <span class="plat-ico">${data.icon}</span>
+      <div class="plat-info">
+        <div class="plat-name">${name}</div>
+        <div class="plat-items-lbl">${itemLbl}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="plat-total">${fmt(data.total)}</div>
+        ${isBest ? '<span class="best-badge">CHEAPEST</span>' : ''}
+      </div>
+    </div>`;
+  });
+
+  unavailPlats.forEach(p => {
+    html += `<div class="plat-row na-row">
+      <span class="plat-ico">${p.icon}</span>
+      <div class="plat-info">
+        <div class="plat-name">${p.name}</div>
+        <div class="plat-items-lbl">Not available from server region</div>
+      </div>
+      <div class="plat-total" style="color:#8e8e93">—</div>
+    </div>`;
+  });
+
+  html += `</div>`;
+
+  if (unavailPlats.length > 0) {
+    html += `<div class="no-data-note">⚠️ Some apps block requests from cloud servers. Prices shown are from available platforms only.</div>`;
+  }
+
+  // ── SECTION 3: Recommendation ────────────────────────────────────────
+  html += `<div class="section-header" style="margin-top:24px">Recommendation</div>`;
+
+  const isSplit = result.recommended_carts.length > 1;
+  if (result.total_savings > 0) {
+    html += `<div class="savings-banner">
+      <div>
+        <div class="savings-label">${isSplit ? 'Split order — best deal' : 'Best single app'}</div>
+        <div class="savings-amount">₹${Math.round(result.total_savings)} saved</div>
+        <div class="savings-sub">${result.savings_pct.toFixed(1)}% cheaper than most expensive option</div>
+      </div>
+      <div class="rupee-icon">₹</div>
+    </div>`;
+    result.recommended_carts.forEach(cart => { html += cartCardHTML(cart, false); });
+    if (isSplit && result.single_best_cart) {
+      html += `<div style="font-size:13px;color:#6e6e73;margin:10px 0 6px">vs. ordering everything from one app:</div>`;
+      html += cartCardHTML(result.single_best_cart, true);
+    }
+  } else if (result.single_best_cart) {
+    html += cartCardHTML(result.single_best_cart, false);
+  } else if (platsWithData.length > 0) {
+    const [bestName, bestData] = platsWithData[0];
+    html += `<div class="cart-card">
+      <div class="cart-header">
+        <div class="cart-platform">${bestData.icon} ${bestName}</div>
+        <div class="cart-total-amt">${fmt(bestData.total)}</div>
+      </div>
+      <div style="font-size:13px;color:#6e6e73">Cheapest available option for your list</div>
+    </div>`;
+  }
+
   html += `<button class="back-btn" onclick="showView('input')">← Compare Again</button>`;
 
-  const rv = document.getElementById('results-view');
-  rv.innerHTML = html;
+  document.getElementById('results-view').innerHTML = html;
   showView('results');
-  window.scrollTo(0,0);
+  window.scrollTo(0, 0);
 }
 
 function cartCardHTML(cart, dimmed) {
@@ -364,7 +424,7 @@ function cartCardHTML(cart, dimmed) {
   return `<div class="cart-card ${dimmed?'dimmed':''}">
     <div class="cart-header">
       <div class="cart-platform">${cart.platform}</div>
-      <div><div class="cart-total">${fmt(cart.total)}</div>${delHTML}</div>
+      <div><div class="cart-total-amt">${fmt(cart.total)}</div>${delHTML}</div>
     </div>
     <div class="cart-meta"><span>${cart.item_count} items</span><span>Subtotal ${fmt(cart.subtotal)}</span></div>
     <div class="tags">${tags}</div>
@@ -372,8 +432,7 @@ function cartCardHTML(cart, dimmed) {
 }
 
 function showError(msg) {
-  const rv = document.getElementById('results-view');
-  rv.innerHTML = `<div class="error-view">
+  document.getElementById('results-view').innerHTML = `<div class="error-view">
     <div class="error-icon">📡</div>
     <div class="error-title">Comparison Failed</div>
     <div class="error-msg">${msg}</div>
