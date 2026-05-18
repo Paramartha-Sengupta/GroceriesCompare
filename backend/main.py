@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from matcher import normalize_grocery_list, build_price_matrix
 from optimizer import optimize, OptimizationResult
 from scrapers import ALL_SCRAPERS
-from scrapers.base import ScrapedItem
+from scrapers.base import ScrapedItem, ScrapeResult, pincode_to_latlon
 
 jobs: dict[str, dict[str, Any]] = {}
 
@@ -36,6 +36,57 @@ app.add_middleware(
 @app.get("/healthz")
 async def healthz():
     return {"status": "ok"}
+
+
+# ── Client-side scraping endpoints ───────────────────────────────────────────
+
+class NormalizeRequest(BaseModel):
+    grocery_list: str
+    pincode: str
+
+
+@app.post("/normalize")
+async def normalize_endpoint(req: NormalizeRequest):
+    queries = await normalize_grocery_list(req.grocery_list)
+    lat, lon = await pincode_to_latlon(req.pincode)
+    return {"queries": queries, "lat": lat, "lon": lon}
+
+
+class DirectItem(BaseModel):
+    name: str
+    price: float
+    unit: str = ""
+    image_url: str = ""
+
+
+class DirectCompareRequest(BaseModel):
+    queries: list[str]
+    results: dict[str, dict[str, DirectItem | None]]
+
+
+@app.post("/compare-direct", response_model=dict)
+async def compare_direct(req: DirectCompareRequest):
+    queries = req.queries
+    all_results: dict[str, list] = {}
+    for platform, qmap in req.results.items():
+        platform_results = []
+        for query in queries:
+            item_data = qmap.get(query)
+            if item_data and item_data.price > 0:
+                items = [ScrapedItem(
+                    platform=platform, search_query=query,
+                    name=item_data.name, price=item_data.price,
+                    unit=item_data.unit, image_url=item_data.image_url,
+                )]
+            else:
+                items = []
+            platform_results.append(ScrapeResult(platform=platform, query=query, items=items))
+        all_results[platform] = platform_results
+
+    price_matrix = build_price_matrix(queries, all_results)
+    result = optimize(price_matrix)
+    response = _build_response("direct", queries, result, price_matrix)
+    return response.model_dump()
 
 
 _static_dir = os.path.join(os.path.dirname(__file__), "static")
