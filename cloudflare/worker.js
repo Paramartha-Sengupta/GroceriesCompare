@@ -14,157 +14,268 @@ function ok(body) {
   });
 }
 
-async function blinkit(q, lat, lon) {
-  const r = await fetch(
-    `https://blinkit.com/v6/search/?q=${encodeURIComponent(q)}&start=0&size=20`,
-    { headers: { app_client: "consumer_web", lat: String(lat), lon: String(lon),
-        "User-Agent": MOBILE_UA, Accept: "application/json",
-        Origin: "https://blinkit.com", Referer: "https://blinkit.com/" } }
+// Extract __NEXT_DATA__ JSON from a Next.js HTML page
+function extractNextData(html) {
+  const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+  if (!m) return null;
+  try { return JSON.parse(m[1]); } catch { return null; }
+}
+
+// Recursively find the first array that looks like a product list
+function findProductArray(obj, depth) {
+  if (depth > 7 || !obj || typeof obj !== "object") return null;
+  if (Array.isArray(obj)) {
+    if (obj.length > 0) {
+      const first = obj[0];
+      if (typeof first === "object" && first !== null &&
+          (first.name || first.desc || first.product_name || first.display_name) &&
+          (first.price != null || first.mrp != null || first.sp != null ||
+           first.discountedSellingPrice != null || first.sellingPrice != null)) {
+        return obj;
+      }
+    }
+    for (const item of obj) {
+      const f = findProductArray(item, depth + 1);
+      if (f) return f;
+    }
+  } else {
+    const priorityKeys = ["objects","prod_list","products","items","results","product_list","productList","searchResult"];
+    for (const key of priorityKeys) {
+      if (obj[key]) { const f = findProductArray(obj[key], depth); if (f) return f; }
+    }
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof v === "object" && v !== null && !priorityKeys.includes(k)) {
+        const f = findProductArray(v, depth + 1);
+        if (f) return f;
+      }
+    }
+  }
+  return null;
+}
+
+function parsePrice(p) {
+  const raw = parseFloat(
+    p.price ?? p.sp ?? p.mrp ?? p.discountedSellingPrice ?? p.sellingPrice ??
+    p.pricing?.discount?.dsc_prc ?? p.pricing?.np ?? 0
   );
-  const body = await r.json();
-  const raw = body?.products?.objects || body?.snippets || [];
+  return raw > 5000 ? raw / 100 : raw;
+}
+
+function parseName(p) {
+  return String(p.name || p.desc || p.product_name || p.display_name || p.productName || "").trim();
+}
+
+function parseUnit(p) {
+  return String(p.unit || p.quantity || p.unit_quantity || p.unitQuantity || p.w || p.qty || p.weight || "").trim();
+}
+
+function parseImage(p) {
+  return String(p.image || p.image_url || p.imageUrl || (p.images?.[0]?.s) || "");
+}
+
+function toItems(raw, max) {
   const out = [];
-  for (const p of raw) {
-    if (out.length >= 5) break;
-    const name = p.name || p.product_name || p.display_name || "";
-    if (!name) continue;
-    let price = parseFloat(p.price || p.mrp || p.sp || p?.pricing?.price || 0);
-    if (price > 5000) price /= 100;
-    if (!price) continue;
-    out.push({ name: name.trim(), price, unit: String(p.unit || p.quantity || ""), imageUrl: p.image || p.image_url || "" });
+  const seen = new Set();
+  for (const p of (raw || [])) {
+    if (out.length >= max) break;
+    if (typeof p !== "object" || !p) continue;
+    const name = parseName(p);
+    const price = parsePrice(p);
+    if (!name || !price || seen.has(name)) continue;
+    seen.add(name);
+    out.push({ name, price, unit: parseUnit(p), imageUrl: parseImage(p) });
   }
   return out;
+}
+
+// ── Scrapers ──────────────────────────────────────────────────────────────────
+
+async function blinkit(q, lat, lon) {
+  // Try JSON API first
+  try {
+    const r = await fetch(
+      `https://blinkit.com/v6/search/?q=${encodeURIComponent(q)}&start=0&size=20`,
+      { headers: { app_client:"consumer_web", lat:String(lat), lon:String(lon),
+          "User-Agent":MOBILE_UA, Accept:"application/json",
+          Origin:"https://blinkit.com", Referer:"https://blinkit.com/" } }
+    );
+    const text = await r.text();
+    if (!text.includes("<!DOCTYPE")) {
+      const body = JSON.parse(text);
+      const raw = body?.products?.objects || body?.snippets || [];
+      const items = toItems(raw, 5);
+      if (items.length) return items;
+    }
+    // Fallback: scrape HTML page with __NEXT_DATA__
+    const r2 = await fetch(
+      `https://blinkit.com/s/?q=${encodeURIComponent(q)}`,
+      { headers: { "User-Agent":DESKTOP_UA, Accept:"text/html",
+          "Accept-Language":"en-IN,en;q=0.9",
+          lat:String(lat), lon:String(lon) } }
+    );
+    const html = await r2.text();
+    const nd = extractNextData(html);
+    if (nd) {
+      const raw = findProductArray(nd, 0);
+      if (raw) return toItems(raw, 5);
+    }
+  } catch (e) { return []; }
+  return [];
 }
 
 async function zepto(q, lat, lon) {
-  const r = await fetch(
-    `https://api.zeptonow.com/api/v1/search?query=${encodeURIComponent(q)}&pageNumber=0&pageSize=15&version=5`,
-    { headers: { "User-Agent": MOBILE_UA, Accept: "application/json",
-        appVersion: "10.6.2", deviceType: "3", storeType: "1",
-        latitude: String(lat), longitude: String(lon) } }
-  );
-  const body = await r.json();
-  const raw = [];
-  for (const sec of (body?.sections || body?.data?.sections || [])) {
-    for (const item of (sec.items || [])) {
-      const p = item.product || item;
-      if (p?.name) raw.push(p);
+  try {
+    const r = await fetch(
+      `https://api.zeptonow.com/api/v1/search?query=${encodeURIComponent(q)}&pageNumber=0&pageSize=15&version=5`,
+      { headers: { "User-Agent":MOBILE_UA, Accept:"application/json",
+          appVersion:"10.6.2", deviceType:"3", storeType:"1",
+          latitude:String(lat), longitude:String(lon) } }
+    );
+    const text = await r.text();
+    if (!text.includes("<!DOCTYPE")) {
+      const body = JSON.parse(text);
+      const raw = [];
+      for (const sec of (body?.sections || body?.data?.sections || [])) {
+        for (const item of (sec.items || [])) {
+          const p = item.product || item;
+          if (p?.name) raw.push(p);
+        }
+      }
+      for (const k of ["products","items","results"]) {
+        if (!raw.length && Array.isArray(body[k])) { raw.push(...body[k]); break; }
+      }
+      const items = toItems(raw, 5);
+      if (items.length) return items;
     }
-  }
-  for (const key of ["products", "items", "results"]) {
-    if (!raw.length && Array.isArray(body[key])) { raw.push(...body[key]); break; }
-  }
-  const out = [];
-  for (const p of raw) {
-    if (out.length >= 5) break;
-    const name = p.name || p.product_name || "";
-    if (!name) continue;
-    let price = parseFloat(p.discountedSellingPrice || p.sellingPrice || p.price || 0);
-    if (price > 5000) price /= 100;
-    if (!price) continue;
-    out.push({ name: name.trim(), price, unit: String(p.unitQuantity || p.quantity || ""), imageUrl: p.imageUrl || p.image || "" });
-  }
-  return out;
+    // Fallback: Next.js page
+    const r2 = await fetch(
+      `https://www.zeptonow.com/search?query=${encodeURIComponent(q)}`,
+      { headers: { "User-Agent":DESKTOP_UA, Accept:"text/html", "Accept-Language":"en-IN,en;q=0.9" } }
+    );
+    const html = await r2.text();
+    const nd = extractNextData(html);
+    if (nd) {
+      const raw = findProductArray(nd, 0);
+      if (raw) return toItems(raw, 5);
+    }
+  } catch { return []; }
+  return [];
 }
 
 async function bigbasket(q) {
-  const r = await fetch(
-    `https://www.bigbasket.com/listing-svc/v2/products/?type=ps&q=${encodeURIComponent(q)}&tab_type=%5B%22prd%22%5D&sorted_on=relevance`,
-    { headers: { "User-Agent": DESKTOP_UA, Accept: "application/json",
-        "x-channel": "web", Origin: "https://www.bigbasket.com" } }
-  );
-  const body = await r.json();
-  let raw = [];
-  for (const tab of (body.tab_info || [body])) {
-    if ((tab.prod_list || []).length) { raw = tab.prod_list; break; }
-  }
-  for (const key of ["products", "data", "items", "results"]) {
-    if (!raw.length && Array.isArray(body[key])) { raw = body[key]; break; }
-  }
-  const out = [];
-  for (const p of raw) {
-    if (out.length >= 5) break;
-    const name = p.desc || p.name || p.product_name || "";
-    if (!name) continue;
-    const disc = p?.pricing?.discount || {};
-    const price = parseFloat(disc.dsc_prc || p?.pricing?.np || p.sp || p.price || p.mrp || 0);
-    if (!price) continue;
-    out.push({ name: name.trim(), price, unit: String(p.w || p.unit || p.qty || ""), imageUrl: (p.images || [{}])[0]?.s || p.image || "" });
-  }
-  return out;
+  try {
+    const r = await fetch(
+      `https://www.bigbasket.com/listing-svc/v2/products/?type=ps&q=${encodeURIComponent(q)}&tab_type=%5B%22prd%22%5D&sorted_on=relevance`,
+      { headers: { "User-Agent":DESKTOP_UA, Accept:"application/json",
+          "x-channel":"web", Origin:"https://www.bigbasket.com" } }
+    );
+    const text = await r.text();
+    if (!text.includes("<!DOCTYPE")) {
+      const body = JSON.parse(text);
+      let raw = [];
+      for (const tab of (body.tab_info || [body])) {
+        if ((tab.prod_list || []).length) { raw = tab.prod_list; break; }
+      }
+      for (const k of ["products","data","items","results"]) {
+        if (!raw.length && Array.isArray(body[k])) { raw = body[k]; break; }
+      }
+      const items = toItems(raw, 5);
+      if (items.length) return items;
+    }
+    // Fallback: Next.js page
+    const r2 = await fetch(
+      `https://www.bigbasket.com/ps/?q=${encodeURIComponent(q)}`,
+      { headers: { "User-Agent":DESKTOP_UA, Accept:"text/html", "Accept-Language":"en-IN,en;q=0.9" } }
+    );
+    const html = await r2.text();
+    const nd = extractNextData(html);
+    if (nd) {
+      const raw = findProductArray(nd, 0);
+      if (raw) return toItems(raw, 5);
+    }
+  } catch { return []; }
+  return [];
 }
 
 async function instamart(q, lat, lon) {
-  const params = new URLSearchParams({
-    pageNumber: "0", searchResultsOffset: "0", limit: "15", query: q,
-    ageConsent: "false", layoutId: "3994", pageType: "INSTAMART_SEARCH_PAGE",
-    isPreSearchTag: "false", highConfidencePageNo: "0", lowConfidencePageNo: "0",
-  });
-  const r = await fetch(`https://www.swiggy.com/api/instamart/search?${params}`, {
-    headers: { "User-Agent": MOBILE_UA, Accept: "application/json",
-      Origin: "https://www.swiggy.com",
-      Referer: `https://www.swiggy.com/instamart/search?query=${encodeURIComponent(q)}` }
-  });
-  const body = await r.json();
-  const raw = [];
-  for (const w of (body?.data?.widgets || body?.widgets || [])) {
-    raw.push(...(w?.data?.products || w?.products || []));
-  }
-  const out = [];
-  for (const p of raw) {
-    if (out.length >= 5) break;
-    const name = p.name || p.display_name || "";
-    if (!name) continue;
-    let price = parseFloat(p.price || p.instamart_price || p.mrp || 0);
-    if (price > 5000) price /= 100;
-    if (!price) continue;
-    out.push({ name: name.trim(), price, unit: String(p.quantity || p.unit || ""), imageUrl: p.image_id || p.image || "" });
-  }
-  return out;
+  try {
+    const params = new URLSearchParams({
+      pageNumber:"0", searchResultsOffset:"0", limit:"15", query:q,
+      ageConsent:"false", layoutId:"3994", pageType:"INSTAMART_SEARCH_PAGE",
+      isPreSearchTag:"false", highConfidencePageNo:"0", lowConfidencePageNo:"0",
+    });
+    const r = await fetch(`https://www.swiggy.com/api/instamart/search?${params}`, {
+      headers: { "User-Agent":MOBILE_UA, Accept:"application/json",
+        Origin:"https://www.swiggy.com",
+        Referer:`https://www.swiggy.com/instamart/search?query=${encodeURIComponent(q)}` }
+    });
+    const text = await r.text();
+    if (!text.includes("<!DOCTYPE")) {
+      const body = JSON.parse(text);
+      const raw = [];
+      for (const w of (body?.data?.widgets || body?.widgets || [])) {
+        raw.push(...(w?.data?.products || w?.products || []));
+      }
+      const items = toItems(raw, 5);
+      if (items.length) return items;
+    }
+  } catch { return []; }
+  return [];
 }
 
 async function amazonfresh(q) {
-  const r = await fetch(
-    `https://www.amazon.in/s?k=${encodeURIComponent(q)}&i=grocery&rh=n%3A5940050031`,
-    { headers: { "User-Agent": DESKTOP_UA, Accept: "text/html,application/xhtml+xml", "Accept-Language": "en-IN,en;q=0.9" } }
-  );
-  const html = await r.text();
-  const out = [];
-  const blocks = html.split('data-component-type="s-search-result"');
-  for (let i = 1; i < blocks.length && out.length < 5; i++) {
-    const b = blocks[i];
-    const nm = b.match(/<h2[^>]*>[\s\S]*?<span[^>]*>([^<]{3,120})<\/span>/);
-    const wm = b.match(/a-price-whole[^>]*>([\d,]+)/);
-    const fm = b.match(/a-price-fraction[^>]*>(\d+)/);
-    if (nm && wm) {
-      const name = nm[1].replace(/&amp;/g, "&").replace(/&nbsp;/g, " ").trim();
-      const price = parseFloat(wm[1].replace(/,/g, "") + "." + (fm?.[1] || "0"));
-      if (name && price > 0) out.push({ name, price, unit: "", imageUrl: "" });
+  try {
+    const r = await fetch(
+      `https://www.amazon.in/s?k=${encodeURIComponent(q)}&i=grocery&rh=n%3A5940050031`,
+      { headers: { "User-Agent":DESKTOP_UA, Accept:"text/html,application/xhtml+xml",
+          "Accept-Language":"en-IN,en;q=0.9" } }
+    );
+    const html = await r.text();
+    const out = [];
+    const blocks = html.split('data-component-type="s-search-result"');
+    for (let i = 1; i < blocks.length && out.length < 5; i++) {
+      const b = blocks[i];
+      const nm = b.match(/<h2[^>]*>[\s\S]*?<span[^>]*>([^<]{3,120})<\/span>/);
+      const wm = b.match(/a-price-whole[^>]*>([\d,]+)/);
+      const fm = b.match(/a-price-fraction[^>]*>(\d+)/);
+      if (nm && wm) {
+        const name = nm[1].replace(/&amp;/g,"&").replace(/&nbsp;/g," ").trim();
+        const price = parseFloat(wm[1].replace(/,/g,"") + "." + (fm?.[1] || "0"));
+        if (name && price > 0) out.push({ name, price, unit:"", imageUrl:"" });
+      }
     }
-  }
-  return out;
+    return out;
+  } catch { return []; }
 }
 
 async function flipkart(q, lat, lon) {
-  const r = await fetch(
-    `https://minutes.flipkart.com/api/4/page?q=${encodeURIComponent(q)}&type=search`,
-    { headers: { "User-Agent": MOBILE_UA, Accept: "application/json",
-        "X-User-Agent": "FKUA/app/42/42.0/ios; Mobile",
-        Origin: "https://minutes.flipkart.com" } }
-  );
-  const body = await r.json();
-  const raw = body?.data?.products || body?.products || body?.items || [];
-  const out = [];
-  for (const p of raw) {
-    if (out.length >= 5) break;
-    const name = p.name || p.title || p.productName || "";
-    if (!name) continue;
-    let price = parseFloat(p.price || p.sellingPrice || p.finalPrice || p.mrp || 0);
-    if (price > 5000) price /= 100;
-    if (!price) continue;
-    out.push({ name: name.trim(), price, unit: String(p.quantity || p.unit || ""), imageUrl: p.image || p.imageUrl || "" });
-  }
-  return out;
+  try {
+    const r = await fetch(
+      `https://minutes.flipkart.com/api/4/page?q=${encodeURIComponent(q)}&type=search`,
+      { headers: { "User-Agent":MOBILE_UA, Accept:"application/json",
+          "X-User-Agent":"FKUA/app/42/42.0/ios; Mobile",
+          Origin:"https://minutes.flipkart.com" } }
+    );
+    const text = await r.text();
+    if (!text.includes("<!DOCTYPE")) {
+      const body = JSON.parse(text);
+      const raw = body?.data?.products || body?.products || body?.items || [];
+      const items = toItems(raw, 5);
+      if (items.length) return items;
+    }
+    // Fallback: Next.js page
+    const r2 = await fetch(
+      `https://minutes.flipkart.com/search?q=${encodeURIComponent(q)}`,
+      { headers: { "User-Agent":DESKTOP_UA, Accept:"text/html", "Accept-Language":"en-IN,en;q=0.9" } }
+    );
+    const html = await r2.text();
+    const nd = extractNextData(html);
+    if (nd) {
+      const raw = findProductArray(nd, 0);
+      if (raw) return toItems(raw, 5);
+    }
+  } catch { return []; }
+  return [];
 }
 
 export default {
